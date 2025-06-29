@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Step 3: Drone Code</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Step 3: Drone Code & Flight Logic</h1>
+
+    <p><strong>Let's understand how a drone "thinks" and flies. Below is a simplified but complete control logic.</strong></p>
+
+    <h2>✈️ 6 Degrees of Freedom (6-DoF)</h2>
+    <ul>
+      <li><strong>Linear:</strong> Surge (forward/back), Sway (left/right), Heave (up/down)</li>
+      <li><strong>Rotational:</strong> Roll (x-axis), Pitch (y-axis), Yaw (z-axis)</li>
+    </ul>
+
+    <p>To stabilize and move in 3D space, our drone senses these axes using an <strong>IMU</strong> (like MPU-9250) and corrects orientation using PID control.</p>
+
+    <h2>🧠 Sensors & Components Used</h2>
+    <ul>
+      <li><strong>IMU:</strong> Measures angular velocity and acceleration (MPU-9250)</li>
+      <li><strong>GPS:</strong> Gives global location (NEO-6M)</li>
+      <li><strong>Barometer:</strong> Measures air pressure for altitude (BMP280)</li>
+      <li><strong>Flight Controller:</strong> Brain of the drone (F405 or Teensy)</li>
+    </ul>
+
+    <h2>🧩 Code Structure (main.cpp)</h2>
+    <pre><code>
+// main.cpp
+
+#include "imu.h"
+#include "gps.h"
+#include "barometer.h"
+#include "pid.h"
+#include "motor.h"
+#include "config.h"
+
+void setup() {
+  Serial.begin(115200);
+  initIMU();        // Initialize accelerometer, gyro
+  initBarometer();  // For altitude control
+  initGPS();        // For navigation (optional)
+  initPID();        // Set PID parameters
+  initMotors();     // Arm ESCs
+}
+
+void loop() {
+  // 1. Read sensors
+  float roll, pitch, yaw;
+  readIMU(&roll, &pitch, &yaw);
+
+  float altitude = readBarometer();
+
+  // 2. Compute corrections using PID
+  float rollCmd = computePID(roll, targetRoll, &rollPID);
+  float pitchCmd = computePID(pitch, targetPitch, &pitchPID);
+  float yawCmd = computePID(yaw, targetYaw, &yawPID);
+  float throttle = computeThrottle(altitude, targetAltitude);
+
+  // 3. Adjust motor speeds
+  setMotorSpeeds(rollCmd, pitchCmd, yawCmd, throttle);
+
+  delay(10); // 100Hz control loop
+}
+    </code></pre>
+
+    <h2>⚙️ PID Controller Logic (pid.cpp)</h2>
+    <pre><code>
+float computePID(float input, float target, PIDController* pid) {
+  float error = target - input;
+  pid->integral += error;
+  float derivative = error - pid->prevError;
+  pid->prevError = error;
+
+  return pid->kp * error + pid->ki * pid->integral + pid->kd * derivative;
+}
+    </code></pre>
+
+    <h2>🔌 Motors Output Logic (motor.cpp)</h2>
+    <pre><code>
+void setMotorSpeeds(float roll, float pitch, float yaw, float throttle) {
+  // Mix control signals for 4 motors
+  float m1 = throttle + pitch - roll + yaw; // front-left
+  float m2 = throttle + pitch + roll - yaw; // front-right
+  float m3 = throttle - pitch + roll + yaw; // back-right
+  float m4 = throttle - pitch - roll - yaw; // back-left
+
+  // Send PWM signals (after clamping)
+  writePWM(motor1, constrain(m1));
+  writePWM(motor2, constrain(m2));
+  writePWM(motor3, constrain(m3));
+  writePWM(motor4, constrain(m4));
+}
+    </code></pre>
+
+    <h2>📦 Configuration File (config.h)</h2>
+    <pre><code>
+#define targetRoll  0.0
+#define targetPitch 0.0
+#define targetYaw   0.0
+#define targetAltitude 10.0
+
+PIDController rollPID = {1.2, 0.0, 0.3};
+PIDController pitchPID = {1.2, 0.0, 0.3};
+PIDController yawPID = {0.8, 0.0, 0.2};
+    </code></pre>
+
+    <h2>💡 Final Thoughts</h2>
+    <p>This code handles the entire drone flight loop: from sensing → to correcting → to acting. For real-world use, you'll add:</p>
+    <ul>
+      <li>IMU calibration</li>
+      <li>Failsafe checks</li>
+      <li>GPS waypoints (for auto flight)</li>
+      <li>Data logging</li>
+    </ul>
+
+    <a class="btn" href="test.html">Next: Testing ✅</a>
+  </div>
+</body>
+</html>
