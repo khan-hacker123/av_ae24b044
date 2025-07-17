@@ -1,17 +1,146 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Select Components</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Component Slider with Persistent State</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #eee;
+    padding: 40px;
+    display: flex;
+    justify-content: center;
+  }
+  #slider {
+    width: 350px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+    position: relative;
+  }
+  #componentCatalog {
+    display: flex;
+    transition: transform 0.4s ease;
+    will-change: transform;
+  }
+  .card {
+    min-width: 350px;
+    box-sizing: border-box;
+    padding: 15px;
+    text-align: center;
+  }
+  .card img {
+    width: 150px;
+    height: 150px;
+    object-fit: contain;
+    margin-bottom: 15px;
+  }
+  .card h3 {
+    margin: 8px 0 6px;
+  }
+  .card p {
+    color: #333;
+    font-weight: bold;
+  }
+  .nav-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 18px;
+    border-radius: 4px;
+    user-select: none;
+  }
+  #prevBtn {
+    left: 10px;
+  }
+  #nextBtn {
+    right: 10px;
+  }
+  .nav-button:disabled {
+    background: #999;
+    cursor: default;
+  }
+</style>
 </head>
 <body>
-  <div class="container">
-    <h1>Step 1: Choose Your Components</h1>
-    <div class="catalog" id="componentCatalog"></div>
-    <a class="btn" href="assemble.html">Next: Assembly 🛠</a>
-  </div>
-  <script src="script.js"></script>
+
+<div id="slider">
+  <div id="componentCatalog"></div>
+  <button id="prevBtn" class="nav-button">&lt;</button>
+  <button id="nextBtn" class="nav-button">&gt;</button>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const components = [
+    { name: "Motor (1000KV)", img: "motor-kv1000.jpg", price: "₹350–₹600" },
+    { name: "ESC (30A)", img: "esc-30a.jpg", price: "₹300–₹500" },
+    { name: "Flight Controller (F405)", img: "flightcontroller-f405.jpg", price: "₹1000–₹1800" },
+    { name: "GPS (NEO-6M)", img: "gps-neo6m.jpg", price: "₹650–₹900" },
+    { name: "IMU (MPU-9250)", img: "imu-mpu9250.jpg", price: "₹450–₹700" },
+    { name: "Barometer (BMP280)", img: "barometer-bmp280.jpg", price: "₹150–₹300" },
+    { name: "Battery (3S LiPo)", img: "battery-3s.jpg", price: "₹1000–₹1500" },
+    { name: "Propeller (1045)", img: "propeller-1045.jpg", price: "₹150–₹300" },
+    { name: "Frame (450mm)", img: "frame-450mm.jpg", price: "₹700–₹1200" },
+    { name: "PDB", img: "pdb-board.jpg", price: "₹200–₹350" }
+  ];
+
+  const catalog = document.getElementById("componentCatalog");
+  components.forEach(c => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `<img src="${c.img}" alt="${c.name}"><h3>${c.name}</h3><p>${c.price}</p>`;
+    catalog.appendChild(card);
+  });
+
+  const totalSlides = components.length;
+  let currentIndex = 0;
+
+  // Restore slide index from localStorage
+  const savedIndex = localStorage.getItem('currentSlideIndex');
+  if(savedIndex !== null && !isNaN(savedIndex)) {
+    currentIndex = Math.min(Math.max(parseInt(savedIndex), 0), totalSlides -1);
+  }
+
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+
+  function updateSlider() {
+    // Move the catalog div to show current slide
+    catalog.style.transform = `translateX(-${currentIndex * 350}px)`;
+    // Save current index to localStorage
+    localStorage.setItem('currentSlideIndex', currentIndex);
+
+    // Disable buttons at edges
+    prevBtn.disabled = currentIndex === 0;
+    nextBtn.disabled = currentIndex === totalSlides - 1;
+  }
+
+  prevBtn.addEventListener('click', () => {
+    if(currentIndex > 0) {
+      currentIndex--;
+      updateSlider();
+    }
+  });
+
+  nextBtn.addEventListener('click', () => {
+    if(currentIndex < totalSlides - 1) {
+      currentIndex++;
+      updateSlider();
+    }
+  });
+
+  // Initialize slider position
+  updateSlider();
+});
+</script>
+
 </body>
 </html>
