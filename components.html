@@ -40,62 +40,59 @@
       text-align: center;
     }
 
-    /* Component positions */
-    .motor-spot.arm1 { top: 20px; left: 50px; }
-    .motor-spot.arm2 { top: 20px; right: 50px; left: auto; }
-    .motor-spot.arm3 { bottom: 20px; left: 50px; }
-    .motor-spot.arm4 { bottom: 20px; right: 50px; left: auto; }
+    /* Updated component positions */
+    .motor-spot.arm1 { top: 42px; left: 42px; }     /* Front-left */
+    .motor-spot.arm2 { top: 42px; right: 42px; left: auto; } /* Front-right */
+    .motor-spot.arm3 { bottom: 28px; left: 60px; }  /* Rear-left */
+    .motor-spot.arm4 { bottom: 28px; right: 60px; left: auto; } /* Rear-right */
 
     .battery-spot {
-      top: 50%;
+      top: 62%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100px;
+    }
+
+    .flight-controller-spot {
+      top: 48%;
       left: 50%;
       transform: translate(-50%, -50%);
       width: 120px;
     }
 
-    .flight-controller-spot {
-      top: 40%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 140px;
-    }
-
     .gps-spot {
       top: 10%;
-      right: 20px;
+      right: 30px;
       width: 100px;
     }
 
     .esc-spot {
-      top: 50%;
+      top: 55%;
       right: 20px;
       width: 100px;
-      transform: translateY(-50%);
     }
 
     .imu-spot {
-      top: 60%;
+      top: 70%;
       left: 20px;
       width: 100px;
     }
 
     .barometer-spot {
-      bottom: 20px;
+      bottom: 15px;
       left: 50%;
       transform: translateX(-50%);
       width: 120px;
     }
 
     .propeller-spot {
-      bottom: 10px;
-      right: 50px;
+      top: 90%;
+      right: 40px;
       width: 100px;
     }
 
     .frame-spot {
-      bottom: 10px;
-      left: 50px;
-      width: 100px;
+      display: none; /* Hide label for frame */
     }
 
     .pdb-spot {
@@ -208,7 +205,7 @@
 
         selected.forEach(name => {
           const comp = components.find(c => c.name === name);
-          if (!comp) return;
+          if (!comp || name.includes("Frame")) return; // Skip rendering label for Frame
 
           comp.spots.forEach(spotClass => {
             const label = document.createElement('div');
