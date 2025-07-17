@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -15,18 +15,18 @@
       gap: 40px;
       user-select: none;
     }
+
     /* Drone frame container */
     #droneFrame {
       position: relative;
       width: 400px;
       height: 400px;
-      background: #ccc url('https://i.imgur.com/qA8tRwN.png') no-repeat center; 
-      /* This is a simple drone frame silhouette */
+      background: #ccc url('drone-frame-xview.png') no-repeat center;
       background-size: contain;
       border-radius: 12px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
-    /* Label styling for components on drone */
+
     .component-label {
       position: absolute;
       background: rgba(0,123,255,0.8);
@@ -35,25 +35,17 @@
       padding: 4px 8px;
       border-radius: 6px;
       font-size: 14px;
-      pointer-events: none; /* prevents interference */
+      pointer-events: none;
       white-space: nowrap;
       text-align: center;
     }
 
-    /* Positions of component spots on drone frame */
-    /* Motors on 4 arms */
-    .motor-spot {
-      width: 70px;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-    }
+    /* Component positions */
     .motor-spot.arm1 { top: 20px; left: 50px; }
     .motor-spot.arm2 { top: 20px; right: 50px; left: auto; }
     .motor-spot.arm3 { bottom: 20px; left: 50px; }
     .motor-spot.arm4 { bottom: 20px; right: 50px; left: auto; }
 
-    /* Battery in center */
     .battery-spot {
       top: 50%;
       left: 50%;
@@ -61,7 +53,6 @@
       width: 120px;
     }
 
-    /* Flight controller in center but slightly above battery */
     .flight-controller-spot {
       top: 40%;
       left: 50%;
@@ -69,41 +60,44 @@
       width: 140px;
     }
 
-    /* GPS on top right */
     .gps-spot {
       top: 10%;
       right: 20px;
       width: 100px;
     }
 
-    /* Other generic spots */
     .esc-spot {
       top: 50%;
       right: 20px;
       width: 100px;
       transform: translateY(-50%);
     }
+
     .imu-spot {
       top: 60%;
       left: 20px;
       width: 100px;
     }
+
     .barometer-spot {
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
       width: 120px;
     }
+
     .propeller-spot {
       bottom: 10px;
       right: 50px;
       width: 100px;
     }
+
     .frame-spot {
       bottom: 10px;
       left: 50px;
       width: 100px;
     }
+
     .pdb-spot {
       top: 55%;
       left: 50%;
@@ -111,7 +105,6 @@
       width: 100px;
     }
 
-    /* Component slider */
     #slider {
       width: 360px;
       background: white;
@@ -122,6 +115,7 @@
       padding: 10px;
       user-select: none;
     }
+
     .card {
       display: inline-block;
       width: 150px;
@@ -136,11 +130,13 @@
       vertical-align: top;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
+
     .card.selected {
       background: #007bff;
       color: white;
       box-shadow: 0 0 10px #007bff;
     }
+
     .card img {
       width: 100px;
       height: 100px;
@@ -149,10 +145,12 @@
       pointer-events: none;
       user-select: none;
     }
+
     .card h3 {
       font-size: 16px;
       margin: 6px 0 4px;
     }
+
     .card p {
       font-size: 14px;
       margin: 0;
@@ -162,73 +160,66 @@
 <body>
 
   <div id="droneFrame"></div>
-
   <div id="slider"></div>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const components = [
-    { name: "Motor (1000KV)", img: "motor-kv1000.jpg", price: "₹350–₹600", spots: ['motor-spot.arm1', 'motor-spot.arm2', 'motor-spot.arm3', 'motor-spot.arm4'] },
-    { name: "ESC (30A)", img: "esc-30a.jpg", price: "₹300–₹500", spots: ['esc-spot'] },
-    { name: "Flight Controller (F405)", img: "flightcontroller-f405.jpg", price: "₹1000–₹1800", spots: ['flight-controller-spot'] },
-    { name: "GPS (NEO-6M)", img: "gps-neo6m.jpg", price: "₹650–₹900", spots: ['gps-spot'] },
-    { name: "IMU (MPU-9250)", img: "imu-mpu9250.jpg", price: "₹450–₹700", spots: ['imu-spot'] },
-    { name: "Barometer (BMP280)", img: "barometer-bmp280.jpg", price: "₹150–₹300", spots: ['barometer-spot'] },
-    { name: "Battery (3S LiPo)", img: "battery-3s.jpg", price: "₹1000–₹1500", spots: ['battery-spot'] },
-    { name: "Propeller (1045)", img: "propeller-1045.jpg", price: "₹150–₹300", spots: ['propeller-spot'] },
-    { name: "Frame (450mm)", img: "frame-450mm.jpg", price: "₹700–₹1200", spots: ['frame-spot'] },
-    { name: "PDB", img: "pdb-board.jpg", price: "₹200–₹350", spots: ['pdb-spot'] }
-  ];
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const components = [
+        { name: "Motor (1000KV)", img: "motor-kv1000.jpg", price: "₹350–₹600", spots: ['motor-spot.arm1', 'motor-spot.arm2', 'motor-spot.arm3', 'motor-spot.arm4'] },
+        { name: "ESC (30A)", img: "esc-30a.jpg", price: "₹300–₹500", spots: ['esc-spot'] },
+        { name: "Flight Controller (F405)", img: "flightcontroller-f405.jpg", price: "₹1000–₹1800", spots: ['flight-controller-spot'] },
+        { name: "GPS (NEO-6M)", img: "gps-neo6m.jpg", price: "₹650–₹900", spots: ['gps-spot'] },
+        { name: "IMU (MPU-9250)", img: "imu-mpu9250.jpg", price: "₹450–₹700", spots: ['imu-spot'] },
+        { name: "Barometer (BMP280)", img: "barometer-bmp280.jpg", price: "₹150–₹300", spots: ['barometer-spot'] },
+        { name: "Battery (3S LiPo)", img: "battery-3s.jpg", price: "₹1000–₹1500", spots: ['battery-spot'] },
+        { name: "Propeller (1045)", img: "propeller-1045.jpg", price: "₹150–₹300", spots: ['propeller-spot'] },
+        { name: "Frame (450mm)", img: "frame-450mm.jpg", price: "₹700–₹1200", spots: ['frame-spot'] },
+        { name: "PDB", img: "pdb-board.jpg", price: "₹200–₹350", spots: ['pdb-spot'] }
+      ];
 
-  const droneFrame = document.getElementById('droneFrame');
-  const slider = document.getElementById('slider');
+      const droneFrame = document.getElementById('droneFrame');
+      const slider = document.getElementById('slider');
+      const selected = new Set();
 
-  // Keep track of selected components by name
-  const selected = new Set();
+      components.forEach(c => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <img src="${c.img}" alt="${c.name}" />
+          <h3>${c.name}</h3>
+          <p>${c.price}</p>
+        `;
+        slider.appendChild(card);
 
-  // Create cards for slider
-  components.forEach((c, idx) => {
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.innerHTML = `
-      <img src="${c.img}" alt="${c.name}" />
-      <h3>${c.name}</h3>
-      <p>${c.price}</p>
-    `;
-    slider.appendChild(card);
-
-    // Click toggles selection
-    card.addEventListener('click', () => {
-      if (selected.has(c.name)) {
-        selected.delete(c.name);
-        card.classList.remove('selected');
-      } else {
-        selected.add(c.name);
-        card.classList.add('selected');
-      }
-      renderLabels();
-    });
-  });
-
-  function renderLabels() {
-    // Clear old labels
-    droneFrame.querySelectorAll('.component-label').forEach(el => el.remove());
-
-    // For each selected component, create labels at spots
-    selected.forEach(name => {
-      const comp = components.find(c => c.name === name);
-      if (!comp) return;
-
-      comp.spots.forEach(spotClass => {
-        const label = document.createElement('div');
-        label.className = `component-label ${spotClass}`;
-        label.textContent = comp.name.replace(/ \(.+\)/, ''); // Show short name without brackets
-        droneFrame.appendChild(label);
+        card.addEventListener('click', () => {
+          if (selected.has(c.name)) {
+            selected.delete(c.name);
+            card.classList.remove('selected');
+          } else {
+            selected.add(c.name);
+            card.classList.add('selected');
+          }
+          renderLabels();
+        });
       });
+
+      function renderLabels() {
+        droneFrame.querySelectorAll('.component-label').forEach(el => el.remove());
+
+        selected.forEach(name => {
+          const comp = components.find(c => c.name === name);
+          if (!comp) return;
+
+          comp.spots.forEach(spotClass => {
+            const label = document.createElement('div');
+            label.className = `component-label ${spotClass}`;
+            label.textContent = comp.name.replace(/ \(.+\)/, '');
+            droneFrame.appendChild(label);
+          });
+        });
+      }
     });
-  }
-});
-</script>
+  </script>
 
 </body>
 </html>
