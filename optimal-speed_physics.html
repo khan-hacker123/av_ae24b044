@@ -7,6 +7,17 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals with Subtle Accents -->
+    <!-- Application Structure Plan: The application is designed as an interactive educational dashboard. The structure flows from fundamental concepts, detailed physics explanations, interactive simulation, and finally to practical application and nuanced scenarios. It starts with an introduction to the drone and the core physics problem. A "Physics Breakdown" section now provides detailed, hidden explanations for key terms, which can be expanded. The centerpiece remains the interactive "Performance Simulator" where users can manipulate speed and flight conditions (now with more options) to see real-time effects on a central power-vs-speed chart and key performance indicators. This hands-on approach is chosen for usability, allowing users to build intuition by exploring cause and effect directly. Following the simulator, a "Flight Scenarios Analysis" section provides detailed, contextual explanations for the simulated conditions, reinforcing the learning. The structure concludes with a clear summary of optimal speeds, ensuring the main takeaways are explicit. This top-down, interactive design is more engaging and effective for understanding complex relationships than a static report. -->
+    <!-- Visualization & Content Choices:
+        - Report Info: Relationship between speed, power types (induced, parasitic, profile, system), and overall performance (range, time). Extended to include detailed physics concepts (drag types, optimal speed derivations) and additional scenarios (turbulence, ascent/descent, altitude).
+        - Goal: Allow users to understand how these factors interact to determine optimal flight speeds, grasp the underlying physics, and comprehend real-world flight complexities.
+        - Viz/Presentation Method: A multi-line Chart.js chart is used to show the constituent power curves (induced, parasitic) and the resulting total power curve. This visually explains the core trade-off. Dynamic text panels display key metrics (range, flight time), making the consequences of user choices immediately clear. New collapsible text sections provide in-depth physics explanations for specific terms.
+        - Interaction: A primary slider controls the drone's speed. Buttons for different flight scenarios (wind, turns, turbulence, altitude, vertical movement) modify the parameters of the physics model, updating both the chart and the text readouts. This allows for direct comparison and exploration. Clickable "Learn More" buttons toggle detailed physics explanations, allowing users to dive deeper without cluttering the main view.
+        - Justification: This interactive model is superior to static charts because it fosters active learning. Users can test hypotheses ("what if I fly faster in a headwind?") and see the results instantly, building a deeper understanding of the underlying physics. Integrating the detailed research within the application, rather than as separate text, keeps all relevant information in one place and empowers users to control the depth of information they consume.
+        - Library/Method: Chart.js for the main graph due to its simplicity, responsiveness, and canvas-based rendering. Tailwind CSS for layout and styling. All interactions are handled with vanilla JavaScript.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -67,6 +78,7 @@
 
         <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8">
 
+            <!-- Introduction Section -->
             <section id="intro">
                 <h2 class="text-2xl font-bold text-slate-900 mb-4">The Challenge of Electric Flight Efficiency</h2>
                 <div class="space-y-4 text-slate-700">
@@ -77,6 +89,7 @@
 
             <hr class="my-8 border-slate-200">
 
+            <!-- Physics Breakdown Section -->
             <section id="physics-breakdown">
                 <h2 class="text-2xl font-bold text-slate-900 mb-4">The Physics of Quadcopter Power Consumption</h2>
                 <div class="space-y-4 text-slate-700">
@@ -84,27 +97,27 @@
 
                     <div class="bg-slate-50 p-4 rounded-lg">
                         <h3 class="text-xl font-semibold text-slate-800 flex justify-between items-center cursor-pointer" onclick="toggleCollapsible('inducedPower')">
-                            1. Induced Power ($P_{induced}$)
+                            1. Induced Power
                             <span class="text-indigo-600 toggle-icon">▼</span>
                         </h3>
                         <div id="inducedPower" class="collapsible-content">
-                            <p class="mt-2 text-slate-700">This is the power consumed to generate **lift** by accelerating air downwards. It's inversely proportional to forward speed, meaning it's **highest at low speeds**, especially during hovering, and decreases as the drone gains forward velocity. Think of it like a helicopter; at a hover, it's constantly pushing a large volume of air straight down. As it moves forward, its propellers interact with relatively undisturbed air, becoming more efficient in generating lift for forward motion. For a given thrust ($T$), air density ($\rho$), and rotor disk area ($A$), induced power is approximately $P_{induced} \propto T^{3/2} / \sqrt{2 \rho A V_{airspeed}}$, where $V_{airspeed}$ is the true airspeed.</p>
+                            <p class="mt-2 text-slate-700">This is the power consumed to generate **lift** by accelerating air downwards. It's inversely proportional to forward speed, meaning it's **highest at low speeds**, especially during hovering, and decreases as the drone gains forward velocity. Think of it like a helicopter; at a hover, it's constantly pushing a large volume of air straight down. As it moves forward, its propellers interact with relatively undisturbed air, becoming more efficient in generating lift for forward motion. For a given thrust (T), air density (rho), and rotor disk area (A), induced power is approximately P_induced is proportional to T^(3/2) / sqrt(2 * rho * A * V_airspeed), where V_airspeed is the true airspeed.</p>
                         </div>
                     </div>
 
                     <div class="bg-slate-50 p-4 rounded-lg">
                         <h3 class="text-xl font-semibold text-slate-800 flex justify-between items-center cursor-pointer" onclick="toggleCollapsible('parasiticPower')">
-                            2. Parasitic Power ($P_{parasitic}$)
+                            2. Parasitic Power
                             <span class="text-indigo-600 toggle-icon">▼</span>
                         </h3>
                         <div id="parasiticPower" class="collapsible-content">
-                            <p class="mt-2 text-slate-700">This is the power required to overcome **air resistance (drag)** from the non-lifting parts of the drone, such as the fuselage, arms, and landing gear. It's negligible at a hover but increases dramatically with speed, being **proportional to the cube of the airspeed** ($P_{parasitic} \propto V_{airspeed}^3$). For our 5-meter wide drone, the large frontal area means parasitic drag becomes a dominant factor even at moderate forward speeds, significantly impacting efficiency.</p>
+                            <p class="mt-2 text-slate-700">This is the power required to overcome **air resistance (drag)** from the non-lifting parts of the drone, such as the fuselage, arms, and landing gear. It's negligible at a hover but increases dramatically with speed, being **proportional to the cube of the airspeed** (P_parasitic is proportional to V_airspeed^3). For our 5-meter wide drone, the large frontal area means parasitic drag becomes a dominant factor even at moderate forward speeds, significantly impacting efficiency.</p>
                         </div>
                     </div>
 
                     <div class="bg-slate-50 p-4 rounded-lg">
                         <h3 class="text-xl font-semibold text-slate-800 flex justify-between items-center cursor-pointer" onclick="toggleCollapsible('profilePower')">
-                            3. Profile Power ($P_{profile}$)
+                            3. Profile Power
                             <span class="text-indigo-600 toggle-icon">▼</span>
                         </h3>
                         <div id="profilePower" class="collapsible-content">
@@ -114,7 +127,7 @@
 
                     <div class="bg-slate-50 p-4 rounded-lg">
                         <h3 class="text-xl font-semibold text-slate-800 flex justify-between items-center cursor-pointer" onclick="toggleCollapsible('systemPower')">
-                            4. System Power ($P_{system}$)
+                            4. System Power
                             <span class="text-indigo-600 toggle-icon">▼</span>
                         </h3>
                         <div id="systemPower" class="collapsible-content">
@@ -126,12 +139,14 @@
 
             <hr class="my-8 border-slate-200">
 
+            <!-- Performance Simulator Section -->
             <section id="simulator">
                 <h2 class="text-2xl font-bold text-slate-900 mb-2 text-center">Interactive Performance Simulator</h2>
                 <p class="text-center text-slate-600 mb-6">Adjust the speed and flight conditions to see how they affect power, time, and range.</p>
                 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     
+                    <!-- Controls and Readouts -->
                     <div class="lg:col-span-1 bg-slate-50 rounded-lg p-6">
                         <div class="mb-6">
                             <label for="speed-slider" class="block text-sm font-medium text-slate-700 mb-2">Cruising Speed: <span id="speed-value" class="font-bold text-indigo-600 text-lg">75 km/h</span></label>
@@ -168,6 +183,7 @@
                         </div>
                     </div>
 
+                    <!-- Chart -->
                     <div class="lg:col-span-2">
                         <div class="chart-container">
                             <canvas id="power-chart"></canvas>
@@ -178,26 +194,29 @@
             
             <hr class="my-8 border-slate-200">
 
+            <!-- Flight Scenarios Analysis Section -->
             <section id="analysis">
                 <h2 class="text-2xl font-bold text-slate-900 mb-4">Flight Scenarios Analysis & Physics</h2>
                 <div id="analysis-text" class="space-y-4 text-slate-700 bg-slate-50 p-6 rounded-lg">
-                    </div>
+                    <!-- Dynamic content will be loaded here -->
+                </div>
             </section>
 
             <hr class="my-8 border-slate-200">
 
+            <!-- Optimal Speeds Summary Section -->
             <section id="optimal-speeds">
                 <h2 class="text-2xl font-bold text-slate-900 mb-4">Optimal Speed Summary (in Calm Air)</h2>
                 <div class="grid md:grid-cols-2 gap-6">
                     <div class="bg-teal-50 border-l-4 border-teal-500 p-6 rounded-r-lg">
-                        <h3 class="text-xl font-semibold text-teal-800 mb-2">Maximum Endurance Speed ($V_{mp}$)</h3>
+                        <h3 class="text-xl font-semibold text-teal-800 mb-2">Maximum Endurance Speed (V_mp)</h3>
                         <p class="text-4xl font-bold text-teal-600 mb-3"><span id="endurance-speed">--</span> km/h</p>
-                        <p class="text-teal-700">This is the speed where the drone consumes the **least amount of power per second**. It corresponds to the absolute lowest point of the total power curve. Flying at $V_{mp}$ keeps you in the air for the **maximum possible duration**. This is ideal for tasks requiring extended loitering or precise positioning, such as observation, surveying a small area, or search and rescue operations where staying airborne is more critical than covering ground quickly. At this speed, the drone efficiently balances the decreasing induced power with the slowly increasing parasitic power, reaching the most energy-conservative state.</p>
+                        <p class="text-teal-700">This is the speed where the drone consumes the **least amount of power per second**. It corresponds to the absolute lowest point of the total power curve. Flying at V_mp keeps you in the air for the **maximum possible duration**. This is ideal for tasks requiring extended loitering or precise positioning, such as observation, surveying a small area, or search and rescue operations where staying airborne is more critical than covering ground quickly. At this speed, the drone efficiently balances the decreasing induced power with the slowly increasing parasitic power, reaching the most energy-conservative state.</p>
                     </div>
                     <div class="bg-sky-50 border-l-4 border-sky-500 p-6 rounded-r-lg">
-                        <h3 class="text-xl font-semibold text-sky-800 mb-2">Maximum Range Speed ($V_{mr}$)</h3>
+                        <h3 class="text-xl font-semibold text-sky-800 mb-2">Maximum Range Speed (V_mr)</h3>
                         <p class="text-4xl font-bold text-sky-600 mb-3"><span id="range-speed">--</span> km/h</p>
-                        <p class="text-sky-700">This speed provides the **most distance traveled for each unit of energy consumed** (i.e., best km/kWh). Graphically, it's the point where a tangent from the origin touches the total power curve. $V_{mr}$ is always **faster than the maximum endurance speed**. It represents the optimal balance between overcoming air resistance (parasitic drag) and efficiently generating lift (reducing induced drag) to maximize the distance covered. For missions requiring long-distance travel, like our 80 km target, this is the critical speed to aim for. The drone is moving fast enough to significantly reduce induced drag, but not so fast that parasitic drag becomes excessively high.</p>
+                        <p class="text-sky-700">This speed provides the **most distance traveled for each unit of energy consumed** (i.e., best km/kWh). Graphically, it's the point where a tangent from the origin touches the total power curve. V_mr is always **faster than the maximum endurance speed**. It represents the optimal balance between overcoming air resistance (parasitic drag) and efficiently generating lift (reducing induced drag) to maximize the distance covered. For missions requiring long-distance travel, like our 80 km target, this is the critical speed to aim for. The drone is moving fast enough to significantly reduce induced drag, but not so fast that parasitic drag becomes excessively high.</p>
                     </div>
                 </div>
             </section>
