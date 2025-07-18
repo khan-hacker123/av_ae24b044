@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quadcopter Flight Performance Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals with Subtle Accents -->
+    <!-- Application Structure Plan: The application is designed as an interactive educational dashboard. The structure flows from fundamental concepts to interactive simulation, and finally to practical application. It starts with an introduction to the drone and the core physics problem. The centerpiece is the interactive "Performance Simulator" where users can manipulate speed and flight conditions to see real-time effects on a central power-vs-speed chart and key performance indicators. This hands-on approach is chosen for usability, allowing users to build intuition by exploring cause and effect directly. Following the simulator, a "Flight Scenarios Analysis" section provides detailed, contextual explanations for the simulated conditions, reinforcing the learning. The structure concludes with a clear summary of optimal speeds, ensuring the main takeaways are explicit. This top-down, interactive design is more engaging and effective for understanding complex relationships than a static report. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Relationship between speed, power types (induced, parasitic, profile), and overall performance (range, time).
+        - Goal: Allow users to understand how these factors interact to determine optimal flight speeds.
+        - Viz/Presentation Method: A multi-line Chart.js chart is used to show the constituent power curves (induced, parasitic) and the resulting total power curve. This visualizes the core trade-off. Dynamic text panels display key metrics (range, flight time), making the consequences of user choices immediately clear.
+        - Interaction: A primary slider controls the drone's speed, which is the main independent variable. Buttons for different flight scenarios (wind, turns) modify the parameters of the physics model, updating both the chart and the text readouts. This allows for direct comparison and exploration.
+        - Justification: This interactive model is superior to static charts because it fosters active learning. Users can test hypotheses ("what if I fly faster in a headwind?") and see the results instantly, building a deeper understanding of the underlying physics.
+        - Library/Method: Chart.js for the main graph due to its simplicity, responsiveness, and canvas-based rendering. Tailwind CSS for layout and styling. All interactions are handled with vanilla JavaScript.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 45vh;
+            max-height: 450px;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 50vh;
+            }
+        }
+        .slider-thumb::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #4f46e5;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        .slider-thumb::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #4f46e5;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        .nav-button.active {
+            background-color: #4f46e5;
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+
+        <header class="text-center mb-10">
+            <h1 class="text-3xl sm:text-4xl font-bold text-slate-900">Flight Performance Analysis</h1>
+            <p class="mt-2 text-lg text-slate-600">Exploring the Physics of a 1-Seater Electric VTOL Quadcopter</p>
+        </header>
+
+        <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8">
+
+            <!-- Introduction Section -->
+            <section id="intro">
+                <h2 class="text-2xl font-bold text-slate-900 mb-4">The Challenge of Electric Flight</h2>
+                <div class="space-y-4 text-slate-700">
+                    <p>This analysis explores the critical relationship between speed and energy consumption for a large, 5-meter wide, single-seater electric Vertical Take-Off and Landing (VTOL) quadcopter. Unlike gasoline-powered aircraft, electric drones have a very limited energy supply (the battery), making flight efficiency paramount. The goal is to achieve a target range of 80 km by understanding and optimizing flight speed under various conditions. Every decision, from cruising speed to how to handle wind, directly impacts power draw and determines whether the destination is reachable.</p>
+                    <p>We will delve into the core physics, breaking down the forces the drone must overcome and how the power required to do so changes with velocity. This interactive simulator will help you discover the "sweet spot" for speed—the optimal velocity to maximize either flight time (endurance) or flight distance (range).</p>
+                </div>
+            </section>
+
+            <hr class="my-8 border-slate-200">
+
+            <!-- Performance Simulator Section -->
+            <section id="simulator">
+                <h2 class="text-2xl font-bold text-slate-900 mb-2 text-center">Interactive Performance Simulator</h2>
+                <p class="text-center text-slate-600 mb-6">Adjust the speed and flight conditions to see how they affect performance.</p>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    
+                    <!-- Controls and Readouts -->
+                    <div class="lg:col-span-1 bg-slate-50 rounded-lg p-6">
+                        <div class="mb-6">
+                            <label for="speed-slider" class="block text-sm font-medium text-slate-700 mb-2">Cruising Speed: <span id="speed-value" class="font-bold text-indigo-600 text-lg">75 km/h</span></label>
+                            <input id="speed-slider" type="range" min="1" max="150" value="75" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer slider-thumb">
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Flight Condition</label>
+                            <div id="scenario-buttons" class="grid grid-cols-2 gap-2">
+                                <button data-scenario="calm" class="nav-button text-sm p-2 rounded-md bg-slate-200 hover:bg-slate-300 transition active">Calm Air</button>
+                                <button data-scenario="headwind" class="nav-button text-sm p-2 rounded-md bg-slate-200 hover:bg-slate-300 transition">Headwind</button>
+                                <button data-scenario="tailwind" class="nav-button text-sm p-2 rounded-md bg-slate-200 hover:bg-slate-300 transition">Tailwind</button>
+                                <button data-scenario="turn" class="nav-button text-sm p-2 rounded-md bg-slate-200 hover:bg-slate-300 transition">Turn</button>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="text-sm text-slate-500">Power Consumption</h4>
+                                <p id="power-readout" class="text-2xl font-semibold text-indigo-600">-- kW</p>
+                            </div>
+                            <div>
+                                <h4 class="text-sm text-slate-500">Estimated Flight Time</h4>
+                                <p id="time-readout" class="text-2xl font-semibold text-indigo-600">-- min</p>
+                            </div>
+                            <div>
+                                <h4 class="text-sm text-slate-500">Estimated Range</h4>
+                                <p id="range-readout" class="text-2xl font-semibold text-indigo-600">-- km</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart -->
+                    <div class="lg:col-span-2">
+                        <div class="chart-container">
+                            <canvas id="power-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <hr class="my-8 border-slate-200">
+
+            <!-- Flight Scenarios Analysis Section -->
+            <section id="analysis">
+                <h2 class="text-2xl font-bold text-slate-900 mb-4">Flight Scenarios Analysis</h2>
+                <div id="analysis-text" class="space-y-4 text-slate-700 bg-slate-50 p-6 rounded-lg">
+                    <!-- Dynamic content will be loaded here -->
+                </div>
+            </section>
+
+            <hr class="my-8 border-slate-200">
+
+            <!-- Optimal Speeds Summary Section -->
+            <section id="optimal-speeds">
+                <h2 class="text-2xl font-bold text-slate-900 mb-4">Optimal Speed Summary (in Calm Air)</h2>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-teal-50 border-l-4 border-teal-500 p-6 rounded-r-lg">
+                        <h3 class="text-xl font-semibold text-teal-800 mb-2">Maximum Endurance (Longest Time)</h3>
+                        <p class="text-4xl font-bold text-teal-600 mb-3"><span id="endurance-speed">--</span> km/h</p>
+                        <p class="text-teal-700">This is the speed where the drone consumes the least amount of power per second. It occurs at the lowest point of the total power curve. Flying at this speed keeps you in the air for the maximum possible duration, which is ideal for hovering-intensive tasks like observation or surveying, but it is not the most efficient for covering long distances.</p>
+                    </div>
+                    <div class="bg-sky-50 border-l-4 border-sky-500 p-6 rounded-r-lg">
+                        <h3 class="text-xl font-semibold text-sky-800 mb-2">Maximum Range (Farthest Distance)</h3>
+                        <p class="text-4xl font-bold text-sky-600 mb-3"><span id="range-speed">--</span> km/h</p>
+                        <p class="text-sky-700">This speed provides the most distance traveled for each unit of energy consumed (best km/kWh). It is always faster than the maximum endurance speed. It represents the best balance between fighting air resistance (parasitic drag) and efficiently generating lift (reducing induced drag). This is the critical speed for achieving the 80 km range target.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const speedSlider = document.getElementById('speed-slider');
+    const speedValue = document.getElementById('speed-value');
+    const powerReadout = document.getElementById('power-readout');
+    const timeReadout = document.getElementById('time-readout');
+    const rangeReadout = document.getElementById('range-readout');
+    const scenarioButtons = document.getElementById('scenario-buttons');
+    const analysisText = document.getElementById('analysis-text');
+    const enduranceSpeedEl = document.getElementById('endurance-speed');
+    const rangeSpeedEl = document.getElementById('range-speed');
+
+    let currentScenario = 'calm';
+    
+    const analysisContent = {
+        calm: {
+            title: 'Flying in Calm Air',
+            text: `In ideal, still air, the drone's performance is governed by a fundamental trade-off. <strong>Induced Power</strong>, the energy used to generate lift, is highest at low speeds and decreases as the drone moves faster and its wings become more efficient. Conversely, <strong>Parasitic Power</strong>, the energy needed to overcome air resistance (drag), is negligible at a hover but increases exponentially with speed. The 'Total Power' curve is the sum of these forces. The optimal speeds for range and endurance are found by navigating this trade-off effectively.`
+        },
+        headwind: {
+            title: 'Flying into a Headwind (20 km/h)',
+            text: `Flying into a headwind significantly reduces ground range. To maintain a specific speed over the ground, the drone must achieve a higher airspeed (ground speed + wind speed). This dramatically increases parasitic drag and power consumption, as power is proportional to the cube of airspeed. As a result, both flight time and, more severely, range are reduced. The optimal speed for maximum range (relative to the ground) will be slightly higher than in calm air to overcome the wind more effectively, but the achievable range will be much lower.`
+        },
+        tailwind: {
+            title: 'Flying with a Tailwind (20 km/h)',
+            text: `A tailwind provides a significant advantage, increasing range and endurance. The drone needs a lower airspeed to maintain a given ground speed, which substantially reduces parasitic drag and power consumption. The 'free' push from the wind means the drone can fly farther and longer on the same amount of energy. The optimal flight speed relative to the air will be lower to maximize time spent in the favorable air mass.`
+        },
+        turn: {
+            title: 'Performing a Standard Turn',
+            text: `During a turn, the drone must bank. To maintain altitude, the rotors must generate more total thrust than in level flight. This extra thrust has two jobs: a vertical component to counteract gravity, and a horizontal component to pull the drone through the turn. This increased thrust demand directly translates to higher power consumption across all speeds. Sharp, aggressive turns are very energy-intensive and can significantly reduce both flight time and range.`
+        }
+    };
+
+    const droneParams = {
+        weight: 600, 
+        rotorArea: 19.6, 
+        airDensity: 1.225,
+        dragCoefficient: 0.8,
+        frontalArea: 4.5, 
+        profilePowerConstant: 10000, 
+        systemPower: 500,
+        batteryEnergyKWh: 0 
+    };
+    
+    let chart;
+    let optimalSpeeds;
+
+    function calculatePower(v_ms, scenarioParams) {
+        const g = 9.81;
+        const T = droneParams.weight * g * (scenarioParams.loadFactor || 1);
+
+        const v_air_ms = v_ms + (scenarioParams.windSpeed_ms || 0);
+
+        const inducedPower = (T * T) / (2 * droneParams.airDensity * droneParams.rotorArea * Math.max(1, v_air_ms));
+        
+        const parasiticPower = 0.5 * droneParams.airDensity * droneParams.dragCoefficient * droneParams.frontalArea * Math.pow(v_air_ms, 3);
+        
+        const profilePower = droneParams.profilePowerConstant;
+        const systemPower = droneParams.systemPower;
+        
+        const totalPower = inducedPower + parasiticPower + profilePower + systemPower;
+        
+        return {
+            total: totalPower,
+            induced: inducedPower,
+            parasitic: parasiticPower,
+            profileSystem: profilePower + systemPower
+        };
+    }
+    
+    function getScenarioParams(scenario) {
+        switch (scenario) {
+            case 'headwind': return { windSpeed_ms: 20 * 1000 / 3600 };
+            case 'tailwind': return { windSpeed_ms: -20 * 1000 / 3600 };
+            case 'turn': return { loadFactor: 1.2 }; 
+            case 'calm':
+            default: return { windSpeed_ms: 0, loadFactor: 1 };
+        }
+    }
+
+    function calculateOptimalSpeeds() {
+        let minPower = Infinity;
+        let enduranceSpeed = 0;
+        let minPowerPerV = Infinity;
+        let rangeSpeed = 0;
+        
+        for (let v_kmh = 1; v_kmh <= 150; v_kmh++) {
+            const v_ms = v_kmh * 1000 / 3600;
+            const power = calculatePower(v_ms, getScenarioParams('calm')).total;
+
+            if (power < minPower) {
+                minPower = power;
+                enduranceSpeed = v_kmh;
+            }
+
+            const powerPerV = power / v_ms;
+            if (v_kmh > 10 && powerPerV < minPowerPerV) {
+                minPowerPerV = powerPerV;
+                rangeSpeed = v_kmh;
+            }
+        }
+        return { endurance: enduranceSpeed, range: rangeSpeed };
+    }
+    
+    function setBatteryCapacity() {
+        optimalSpeeds = calculateOptimalSpeeds();
+        const rangeSpeed_ms = optimalSpeeds.range * 1000 / 3600;
+        const powerAtRangeSpeed = calculatePower(rangeSpeed_ms, getScenarioParams('calm')).total;
+        const timeToTravel80km_hr = 80 / optimalSpeeds.range;
+        const energyWh = powerAtRangeSpeed * timeToTravel80km_hr;
+        droneParams.batteryEnergyKWh = energyWh / 1000;
+    }
+
+    function updateChart() {
+        const scenarioParams = getScenarioParams(currentScenario);
+        const labels = [];
+        const totalPowerData = [];
+        const inducedPowerData = [];
+        const parasiticPowerData = [];
+        const profileSystemPowerData = [];
+
+        for (let v_kmh = 0; v_kmh <= 150; v_kmh += 5) {
+            labels.push(v_kmh);
+            const v_ms = v_kmh * 1000 / 3600;
+            const power = calculatePower(v_ms, scenarioParams);
+            totalPowerData.push(power.total / 1000); 
+            inducedPowerData.push(power.induced / 1000);
+            parasiticPowerData.push(power.parasitic / 1000);
+            profileSystemPowerData.push(power.profileSystem / 1000);
+        }
+
+        chart.data.labels = labels;
+        chart.data.datasets[0].data = totalPowerData;
+        chart.data.datasets[1].data = inducedPowerData;
+        chart.data.datasets[2].data = parasiticPowerData;
+        chart.data.datasets[3].data = profileSystemPowerData;
+        chart.update('none');
+        updateReadouts();
+    }
+
+    function updateReadouts() {
+        const v_kmh = parseInt(speedSlider.value);
+        speedValue.textContent = `${v_kmh} km/h`;
+
+        const scenarioParams = getScenarioParams(currentScenario);
+        const v_ms = v_kmh * 1000 / 3600;
+        const power = calculatePower(v_ms, scenarioParams);
+
+        if (isNaN(power.total)) return;
+
+        const power_kW = power.total / 1000;
+        powerReadout.textContent = `${power_kW.toFixed(1)} kW`;
+        
+        const flightTime_hr = droneParams.batteryEnergyKWh / power_kW;
+        const flightTime_min = flightTime_hr * 60;
+        timeReadout.textContent = `${flightTime_min.toFixed(0)} min`;
+        
+        const range_km = v_kmh * flightTime_hr;
+        rangeReadout.textContent = `${range_km.toFixed(0)} km`;
+
+        updateChartAnnotation(v_kmh);
+    }
+    
+    function updateChartAnnotation(speed) {
+        chart.options.plugins.annotation.annotations.line1.xMin = speed;
+        chart.options.plugins.annotation.annotations.line1.xMax = speed;
+        chart.update('none');
+    }
+
+    function updateAnalysisContent() {
+        const content = analysisContent[currentScenario];
+        analysisText.innerHTML = `<h3 class="text-xl font-semibold text-slate-800 mb-2">${content.title}</h3><p>${content.text}</p>`;
+    }
+
+    function initChart() {
+        const ctx = document.getElementById('power-chart').getContext('2d');
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Total Power',
+                        data: [],
+                        borderColor: '#4f46e5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                    },
+                    {
+                        label: 'Induced Power',
+                        data: [],
+                        borderColor: '#10b981',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        fill: false,
+                        tension: 0.4,
+                        pointRadius: 0,
+                    },
+                    {
+                        label: 'Parasitic Power',
+                        data: [],
+                        borderColor: '#ef4444',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        fill: false,
+                        tension: 0.4,
+                        pointRadius: 0,
+                    },
+                     {
+                        label: 'Profile + System Power',
+                        data: [],
+                        borderColor: '#f59e0b',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        fill: false,
+                        tension: 0.4,
+                        pointRadius: 0,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Ground Speed (km/h)' },
+                        grid: { color: 'rgba(203, 213, 225, 0.5)' }
+                    },
+                    y: {
+                        title: { display: true, text: 'Power (kW)' },
+                        beginAtZero: true,
+                        grid: { color: 'rgba(203, 213, 225, 0.5)' }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    annotation: {
+                        annotations: {
+                            line1: {
+                                type: 'line',
+                                scaleID: 'x',
+                                value: 75,
+                                borderColor: 'rgba(79, 70, 229, 0.7)',
+                                borderWidth: 2,
+                                borderDash: [6, 6],
+                                label: {
+                                    enabled: false,
+                                }
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+             plugins: [{
+                id: 'customAnnotations',
+                afterDraw: (chart) => {
+                    const ctx = chart.ctx;
+                    const xAxis = chart.scales.x;
+                    const yAxis = chart.scales.y;
+
+                    if (currentScenario !== 'calm') return;
+
+                    ctx.save();
+                    
+                    const enduranceX = xAxis.getPixelForValue(optimalSpeeds.endurance);
+                    const rangeX = xAxis.getPixelForValue(optimalSpeeds.range);
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(enduranceX, yAxis.top);
+                    ctx.lineTo(enduranceX, yAxis.bottom);
+                    ctx.strokeStyle = 'rgba(16, 185, 129, 0.6)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.moveTo(rangeX, yAxis.top);
+                    ctx.lineTo(rangeX, yAxis.bottom);
+                    ctx.strokeStyle = 'rgba(14, 165, 233, 0.6)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+
+                    ctx.textAlign = 'center';
+                    ctx.fillStyle = 'rgba(16, 185, 129, 1)';
+                    ctx.fillText('Max Endurance', enduranceX, yAxis.top + 15);
+                    ctx.fillStyle = 'rgba(14, 165, 233, 1)';
+                    ctx.fillText('Max Range', rangeX, yAxis.top + 30);
+
+                    ctx.restore();
+                }
+            }]
+        });
+    }
+
+    speedSlider.addEventListener('input', updateReadouts);
+    
+    scenarioButtons.addEventListener('click', (e) => {
+        if (e.target.tagName === 'BUTTON') {
+            const scenario = e.target.dataset.scenario;
+            if (scenario !== currentScenario) {
+                currentScenario = scenario;
+                
+                scenarioButtons.querySelectorAll('button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                e.target.classList.add('active');
+                
+                updateChart();
+                updateAnalysisContent();
+            }
+        }
+    });
+
+    // Initial setup
+    setBatteryCapacity();
+    initChart();
+    updateChart();
+    updateAnalysisContent();
+    enduranceSpeedEl.textContent = optimalSpeeds.endurance;
+    rangeSpeedEl.textContent = optimalSpeeds.range;
+});
+</script>
+</body>
+</html>
+ss
