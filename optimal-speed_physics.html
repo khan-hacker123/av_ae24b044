@@ -101,7 +101,7 @@
                             <span class="text-indigo-600 toggle-icon">▼</span>
                         </h3>
                         <div id="inducedPower" class="collapsible-content">
-                            <p class="mt-2 text-slate-700">This is the power consumed to generate **lift** by accelerating air downwards. It's inversely proportional to forward speed, meaning it's **highest at low speeds**, especially during hovering, and decreases as the drone gains forward velocity. Think of it like a helicopter; at a hover, it's constantly pushing a large volume of air straight down. As it moves forward, its propellers interact with relatively undisturbed air, becoming more efficient in generating lift for forward motion. For a given thrust (T), air density (rho), and rotor disk area (A), induced power is approximately P_induced is proportional to T^(3/2) / sqrt(2 * rho * A * V_airspeed), where V_airspeed is the true airspeed.</p>
+                            <p class="mt-2 text-slate-700">This is the power consumed to generate **lift** by accelerating air downwards. It's inversely proportional to forward speed, meaning it's **highest at low speeds**, especially during hovering, and decreases as the drone gains forward velocity. Think of it like a helicopter; at a hover, it's constantly pushing a large volume of air straight down. As it moves forward, its propellers interact with relatively undisturbed air, becoming more efficient in generating lift for forward motion. For a given thrust (T), air density (rho), and rotor disk area (A), induced power is approximately P_induced is proportional to T^(3/2) / sqrt(2 * rho * A * V_airspeed), where V_airspeed is the true airspeed. This concept is rooted in **momentum theory**, which describes the forces and power involved in accelerating a fluid (air) to produce thrust.</p>
                         </div>
                     </div>
 
@@ -111,7 +111,7 @@
                             <span class="text-indigo-600 toggle-icon">▼</span>
                         </h3>
                         <div id="parasiticPower" class="collapsible-content">
-                            <p class="mt-2 text-slate-700">This is the power required to overcome **air resistance (drag)** from the non-lifting parts of the drone, such as the fuselage, arms, and landing gear. It's negligible at a hover but increases dramatically with speed, being **proportional to the cube of the airspeed** (P_parasitic is proportional to V_airspeed^3). For our 5-meter wide drone, the large frontal area means parasitic drag becomes a dominant factor even at moderate forward speeds, significantly impacting efficiency.</p>
+                            <p class="mt-2 text-slate-700">This is the power required to overcome **air resistance (drag)** from the non-lifting parts of the drone, such as the fuselage, arms, and landing gear. It's negligible at a hover but increases dramatically with speed, being **proportional to the cube of the airspeed** (P_parasitic is proportional to V_airspeed^3). For our 5-meter wide drone, the large frontal area means parasitic drag becomes a dominant factor even at moderate forward speeds, significantly impacting efficiency. Parasitic drag is composed of: **Form Drag** (due to the shape pushing through air), **Skin Friction Drag** (due to air rubbing on surfaces), and **Interference Drag** (from airflow interaction between components).</p>
                         </div>
                     </div>
 
@@ -121,7 +121,7 @@
                             <span class="text-indigo-600 toggle-icon">▼</span>
                         </h3>
                         <div id="profilePower" class="collapsible-content">
-                            <p class="mt-2 text-slate-700">This power is consumed to overcome the **drag on the rotating propeller blades themselves**, independent of the air moved for thrust. It's largely dependent on rotor RPM and blade shape, remaining relatively constant across different forward flight speeds. While often a smaller component than induced or parasitic power, it's always present and adds to the baseline power consumption.</p>
+                            <p class="mt-2 text-slate-700">This power is consumed to overcome the **drag on the rotating propeller blades themselves**, independent of the air moved for thrust. It's largely dependent on rotor RPM and blade shape, remaining relatively constant across different forward flight speeds. While often a smaller component than induced or parasitic power, it's always present and adds to the baseline power consumption. This is related to **blade element theory**, which analyzes the forces on small sections of a propeller blade.</p>
                         </div>
                     </div>
 
@@ -216,12 +216,228 @@
                         <h3 class="text-xl font-semibold text-teal-800 mb-2">Maximum Endurance Speed (V_mp)</h3>
                         <p class="text-4xl font-bold text-teal-600 mb-3"><span id="endurance-speed">--</span> km/h</p>
                         <p class="text-teal-700">This is the speed where the drone consumes the **least amount of power per second**. It corresponds to the absolute lowest point of the total power curve. Flying at V_mp keeps you in the air for the **maximum possible duration**. This is ideal for tasks requiring extended loitering or precise positioning, such as observation, surveying a small area, or search and rescue operations where staying airborne is more critical than covering ground quickly. At this speed, the drone efficiently balances the decreasing induced power with the slowly increasing parasitic power, reaching the most energy-conservative state.</p>
+                        <button class="mt-4 px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition" onclick="toggleCollapsible('enduranceFormula')">
+                            View Formula & Terms
+                        </button>
+                        <div id="enduranceFormula" class="collapsible-content text-sm mt-2 p-2 bg-teal-100 rounded">
+                            <p class="font-semibold">Formula for V_mp (Velocity for Minimum Power/Max Endurance):</p>
+                            <p>V_mp = sqrt( (W / (0.5 * rho * S * C_L,mp)) )</p>
+                            <p>OR</p>
+                            <p>V_mp = [ (4/3) * (W/S)^2 * (1 / (rho^2 * C_D0)) * (1 / (pi * e * AR)) ]^(1/4)</p>
+                            <p class="mt-2 font-semibold">Where:</p>
+                            <ul class="list-disc list-inside">
+                                <li>W = Weight of the aircraft (N)</li>
+                                <li>rho = Air density (kg/m^3)</li>
+                                <li>S = Wing area / Rotor disk area (m^2)</li>
+                                <li>C_L,mp = Coefficient of lift at minimum power</li>
+                                <li>C_D0 = Zero-lift drag coefficient</li>
+                                <li>pi = 3.14159...</li>
+                                <li>e = Oswald efficiency factor (accounts for non-elliptical lift distribution)</li>
+                                <li>AR = Aspect Ratio (span^2 / wing area)</li>
+                            </ul>
+                            <p class="mt-2 text-xs text-slate-600">Reference: MIT 16.Unified/www/FALL/thermodynamics/notes/node95.html</p>
+                        </div>
                     </div>
                     <div class="bg-sky-50 border-l-4 border-sky-500 p-6 rounded-r-lg">
                         <h3 class="text-xl font-semibold text-sky-800 mb-2">Maximum Range Speed (V_mr)</h3>
                         <p class="text-4xl font-bold text-sky-600 mb-3"><span id="range-speed">--</span> km/h</p>
                         <p class="text-sky-700">This speed provides the **most distance traveled for each unit of energy consumed** (i.e., best km/kWh). Graphically, it's the point where a tangent from the origin touches the total power curve. V_mr is always **faster than the maximum endurance speed**. It represents the optimal balance between overcoming air resistance (parasitic drag) and efficiently generating lift (reducing induced drag) to maximize the distance covered. For missions requiring long-distance travel, like our 80 km target, this is the critical speed to aim for. The drone is moving fast enough to significantly reduce induced drag, but not so fast that parasitic drag becomes excessively high.</p>
+                        <button class="mt-4 px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition" onclick="toggleCollapsible('rangeFormula')">
+                            View Formula & Terms
+                        </button>
+                        <div id="rangeFormula" class="collapsible-content text-sm mt-2 p-2 bg-sky-100 rounded">
+                            <p class="font-semibold">Formula for V_md (Velocity for Minimum Drag/Max Range):</p>
+                            <p>V_md = sqrt( (W / (0.5 * rho * S * C_L,md)) )</p>
+                            <p>OR</p>
+                            <p>V_md = [ 4 * (W/S)^2 * (1 / (rho^2 * C_D0)) * (1 / (pi * e * AR)) ]^(1/4)</p>
+                            <p class="mt-2 font-semibold">Where:</p>
+                            <ul class="list-disc list-inside">
+                                <li>W = Weight of the aircraft (N)</li>
+                                <li>rho = Air density (kg/m^3)</li>
+                                <li>S = Wing area / Rotor disk area (m^2)</li>
+                                <li>C_L,md = Coefficient of lift at minimum drag</li>
+                                <li>C_D0 = Zero-lift drag coefficient</li>
+                                <li>pi = 3.14159...</li>
+                                <li>e = Oswald efficiency factor (accounts for non-elliptical lift distribution)</li>
+                                <li>AR = Aspect Ratio (span^2 / wing area)</li>
+                            </ul>
+                            <p class="mt-2 text-xs text-slate-600">Reference: MIT 16.Unified/www/FALL/thermodynamics/notes/node95.html</p>
+                        </div>
                     </div>
+                </div>
+            </section>
+
+            <hr class="my-8 border-slate-200">
+
+            <!-- Avionics and Flight Control for Optimization Section -->
+            <section id="avionics-control">
+                <h2 class="text-2xl font-bold text-slate-900 mb-4">Avionics and Flight Control for Optimization</h2>
+                <div class="space-y-4 text-slate-700">
+                    <p>Modern quadcopters rely heavily on sophisticated avionics and flight control systems (FCS) to achieve stable and efficient flight. These systems are not just for basic control; they are crucial for implementing optimization strategies in real-time.</p>
+                    <ul class="list-disc list-inside space-y-2">
+                        <li>**State Estimation:** Using sensors like Inertial Measurement Units (IMUs - accelerometers, gyroscopes), GPS, and airspeed sensors, the FCS accurately estimates the drone's position, velocity, and attitude. This real-time data is fundamental for any optimization.</li>
+                        <li>**PID Control:** Proportional-Integral-Derivative (PID) controllers are widely used to maintain stability and follow desired trajectories. By continuously adjusting motor thrust based on error (difference between desired and actual state), PID loops ensure the drone remains stable even in turbulence or during maneuvers.</li>
+                        <li>**Real-time Power Management:** An intelligent FCS can monitor battery voltage and current draw, adjusting flight parameters (like speed or ascent rate) to stay within safe operating limits or to conserve energy for critical phases of the mission.</li>
+                        <li>**Wind-Aware Path Planning:** Advanced FCS can integrate real-time wind data to calculate the most energy-efficient flight path. For example, it might suggest a longer route with a tailwind rather than a direct route against a strong headwind to maximize range.</li>
+                        <li>**Adaptive Flight:** Some research focuses on adaptive control systems that can learn and adjust to changing aerodynamic conditions or even minor damage, maintaining efficiency.</li>
+                    </ul>
+                    <p class="mt-2">Universities like MIT, Caltech, and others are at the forefront of research in autonomous systems, robust control, and AI for aerospace, which directly contributes to these advanced avionics capabilities.</p>
+                </div>
+            </section>
+
+            <hr class="my-8 border-slate-200">
+
+            <!-- Pseudo-code for Optimization Strategies -->
+            <section id="pseudo-code">
+                <h2 class="text-2xl font-bold text-slate-900 mb-4">Pseudo-code for Optimization Strategies</h2>
+                <div class="space-y-4 text-slate-700">
+                    <p>Here's a conceptual pseudo-code illustrating how a flight management system might implement some of the optimization strategies discussed, focusing on real-time speed adjustment and wind awareness.</p>
+
+                    <div class="bg-slate-100 p-4 rounded-lg">
+                        <h3 class="text-xl font-semibold text-slate-800 mb-2">1. Real-time Speed Optimization (Simplified)</h3>
+                        <pre class="bg-gray-800 text-white p-3 rounded-md overflow-x-auto text-sm"><code>
+FUNCTION OptimizeCruiseSpeed(current_battery_soc, remaining_distance_km, wind_speed_kmh, wind_direction_deg)
+    // Constants (pre-calculated or from lookup tables)
+    V_mp_calm = get_optimal_endurance_speed_calm() // e.g., 50 km/h
+    V_mr_calm = get_optimal_range_speed_calm()   // e.g., 75 km/h
+    Max_Speed_Drone = 150 // km/h
+
+    // Adjust target speed based on mission objective
+    IF mission_objective == "MAX_RANGE" THEN
+        target_airspeed_kmh = V_mr_calm
+    ELSE IF mission_objective == "MAX_ENDURANCE" THEN
+        target_airspeed_kmh = V_mp_calm
+    ELSE IF mission_objective == "MIN_TIME" THEN
+        target_airspeed_kmh = Max_Speed_Drone
+    END IF
+
+    // Account for wind (simplified ground speed adjustment)
+    // This is a basic compensation. Real systems use complex wind models.
+    IF wind_direction_deg is roughly opposing flight_direction THEN // Headwind
+        effective_ground_speed_needed = target_airspeed_kmh // Aim for this ground speed
+        adjusted_airspeed_command = effective_ground_speed_needed + wind_speed_kmh
+    ELSE IF wind_direction_deg is roughly aiding flight_direction THEN // Tailwind
+        effective_ground_speed_needed = target_airspeed_kmh // Aim for this ground speed
+        adjusted_airspeed_command = effective_ground_speed_needed - wind_speed_kmh
+    ELSE // Crosswind or calm
+        adjusted_airspeed_command = target_airspeed_kmh
+    END IF
+
+    // Clamp speed to drone's operational limits
+    adjusted_airspeed_command = CLAMP(adjusted_airspeed_command, 1, Max_Speed_Drone)
+
+    // Estimate required power at adjusted_airspeed_command
+    estimated_power_kW = CalculatePowerConsumption(adjusted_airspeed_command, current_scenario_params)
+
+    // Check if remaining battery can cover distance at this power
+    estimated_flight_time_hr = current_battery_soc * Battery_Capacity_kWh / estimated_power_kW
+    estimated_range_km = adjusted_airspeed_command * estimated_flight_time_hr
+
+    IF estimated_range_km < remaining_distance_km AND mission_objective == "MAX_RANGE" THEN
+        // If not enough range, try to reduce speed slightly to conserve power
+        // (More complex algorithms would iterate or use dynamic programming)
+        adjusted_airspeed_command = adjusted_airspeed_command * 0.95 // Simple reduction
+    END IF
+
+    RETURN adjusted_airspeed_command
+END FUNCTION
+                        </code></pre>
+                    </div>
+
+                    <div class="bg-slate-100 p-4 rounded-lg mt-6">
+                        <h3 class="text-xl font-semibold text-slate-800 mb-2">2. Power Management During Maneuvers (Simplified)</h3>
+                        <pre class="bg-gray-800 text-white p-3 rounded-md overflow-x-auto text-sm"><code>
+FUNCTION ManagePowerForManeuver(maneuver_type, maneuver_intensity, current_speed_kmh, battery_voltage)
+    base_power_at_current_speed = CalculatePowerConsumption(current_speed_kmh, "calm")
+
+    IF maneuver_type == "TURN" THEN
+        power_increase_factor = 1.0 + (maneuver_intensity * 0.2) // e.g., 0.2 for standard turn, higher for aggressive
+        maneuver_power_cost = base_power_at_current_speed * power_increase_factor
+    ELSE IF maneuver_type == "ASCENT" THEN
+        climb_rate_mps = maneuver_intensity // e.g., 2 m/s
+        thrust_for_climb = drone_weight_N * (climb_rate_mps / Max_Climb_Rate) // Simplified
+        power_for_climb = thrust_for_climb * climb_rate_mps
+        maneuver_power_cost = base_power_at_current_speed + power_for_climb
+    ELSE IF maneuver_type == "TURBULENCE" THEN
+        turbulence_factor = 1.0 + (maneuver_intensity * 0.1) // e.g., 0.1 for moderate turbulence
+        maneuver_power_cost = base_power_at_current_speed * turbulence_factor
+    END IF
+
+    IF battery_voltage < CRITICAL_VOLTAGE_THRESHOLD THEN
+        // Reduce maneuver intensity or abort maneuver
+        LOG("Battery critical! Reducing maneuver intensity.")
+        RETURN CLAMP(maneuver_intensity * 0.5, 0.1, 1.0) // Halve intensity
+    END IF
+
+    RETURN maneuver_power_cost
+END FUNCTION
+                        </code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <hr class="my-8 border-slate-200">
+
+            <!-- References Section -->
+            <section id="references">
+                <h2 class="text-2xl font-bold text-slate-900 mb-4">References</h2>
+                <div class="space-y-2 text-slate-700 text-sm">
+                    <p>[1] MIT 16.Unified/www/FALL/thermodynamics/notes/node95.html. (Accessed via optimizations.pdf)</p>
+                    <p>[2] Anderson Jr., John D. (2017). *Fundamentals of Aerodynamics*. McGraw-Hill Education.</p>
+                    <p>[3] NASA Glenn Research Center. (n.d.). *Beginner's Guide to Aeronautics: Drag*. (General physics concept)</p>
+                    <p>[4] McCormick, Barnes W. (1995). *Aerodynamics, Aeronautics, and Flight Mechanics*. John Wiley & Sons.</p>
+                    <p>[5] Pounds, P. E., Mahony, R., & Corke, P. (2010). Modelling and control of a large quadrotor UAV. *Control Engineering Practice*, 18(11), 1192-1202.</p>
+                    <p>[6] Quan, Q. (2017). *Introduction to Multicopter Design and Control*. Springer.</p>
+                    <p>[7] Power. (n.d.). In *Wikipedia*. Retrieved from [https://en.wikipedia.org/wiki/Power_(physics)](https://en.wikipedia.org/wiki/Power_(physics))</p>
+                    <p>[8] Electrical power. (n.d.). In *Wikipedia*. Retrieved from [https://en.wikipedia.org/wiki/Electrical_power](https://en.wikipedia.org/wiki/Electrical_power)</p>
+                    <p>[9] Drone Flight Time & Range: Understanding the Factors. (n.d.). *Drone U*. (General drone performance factors)</p>
+                    <p>[10] How to Calculate Drone Flight Time. (n.d.). *Drone U*. (General drone performance factors)</p>
+                    <p>[11] Drone Flight Time: A Complete Guide. (n.d.). *Dronezon*. (General drone performance factors)</p>
+                    <p>[12] How to Build a Heavy Lift Drone. (n.d.). *Dronezon*. (General drone design principles)</p>
+                    <p>[13] Stolaroff, J. K., et al. (2018). Energy use and emissions of drones for commercial package delivery. *Nature Energy*, 3(9), 723-728. (Discusses scaling effects on energy)</p>
+                    <p>[14] Jetson ONE Official Website. (n.d.). *Jetson Aero*. (Example eVTOL specifications)</p>
+                    <p>[15] Mellinger, D., & Kumar, V. (2011). Minimum altitude flight with a quadrotor. *IEEE International Conference on Robotics and Automation (ICRA)*, 2011, 4400-4406. (Discusses optimal speeds for multirotors)</p>
+                    <p>[16] Aerodynamic drag. (n.d.). In *Wikipedia*. Retrieved from [https://en.wikipedia.org/wiki/Aerodynamic_drag](https://en.wikipedia.org/wiki/Aerodynamic_drag) (General aerodynamics)</p>
+                    <p>[17] Propeller (aircraft). (n.d.). In *Wikipedia*. Retrieved from [https://en.wikipedia.org/wiki/Propeller_(aircraft)](https://en.wikipedia.org/wiki/Propeller_(aircraft)) (General propeller physics)</p>
+                    <p>[18] The Ultimate Guide to Drone Motors. (n.d.). *GetFPV*. (General drone motor/propeller principles)</p>
+                    <p>[19] Drone Battery Guide. (n.d.). *Drone U*. (General battery information)</p>
+                    <p>[20] What is a C Rating on a Drone Battery? (n.d.). *Drone U*. (General battery information)</p>
+                    <p>[21] Lithium-ion battery. (n.d.). In *Wikipedia*. Retrieved from [https://en.wikipedia.org/wiki/Lithium-ion_battery](https://en.wikipedia.org/wiki/Lithium-ion_battery)</p>
+                    <p>[22] Aircraft performance. (n.d.). In *Wikipedia*. Retrieved from [https://en.wikipedia.org/wiki/Aircraft_performance](https://en.wikipedia.org/wiki/Aircraft_performance)</p>
+                    <p>[23] Koning, W. (2018). *Introduction to Aircraft Design*. Delft University of Technology. (Discusses fixed-wing vs. rotary-wing efficiency)</p>
+                    <p>[24] Future of Flight: Electric VTOL Aircraft. (n.d.). *NASA*. (General eVTOL overview)</p>
+                    <p>[25] The Rise of eVTOL Aircraft. (n.d.). *Aviation Week Network*. (General eVTOL overview)</p>
+                    <p>[26] eVTOL. (n.d.). In *Wikipedia*. Retrieved from [https://en.wikipedia.org/wiki/EVTOL](https://en.wikipedia.org/wiki/EVTOL)</p>
+                    <p>[27] The Drone Revolution: VTOL Aircraft. (n.d.). *Boeing*. (General VTOL overview)</p>
+                    <p>[28] Flight performance. (n.d.). In *Wikipedia*. Retrieved from [https://en.wikipedia.org/wiki/Flight_performance](https://en.wikipedia.org/wiki/Flight_performance)</p>
+                    <p>[29] Phillips, W. F. (2009). *Mechanics of Flight*. John Wiley & Sons. (General flight mechanics)</p>
+                    <p>[30] Drone Flight Time: How Long Can Drones Fly? (n.d.). *Drone Pilot Ground School*. (Consumer drone flight times/speeds)</p>
+                    <p>[31] Fastest Drones in the World. (n.d.). *Drone Rush*. (Top speed examples)</p>
+                    <p>[32] Helicopter aerodynamics. (n.d.). In *Wikipedia*. Retrieved from [https://en.wikipedia.org/wiki/Helicopter_aerodynamics](https://en.wikipedia.org/wiki/Helicopter_aerodynamics)</p>
+                    <p>[33] Drone Flight in Wind: A Comprehensive Guide. (n.d.). *Drone U*. (Wind effects on drones)</p>
+                    <p>[34] Density altitude. (n.d.). In *Wikipedia*. Retrieved from [https://en.wikipedia.org/wiki/Density_altitude](https://en.wikipedia.org/wiki/Density_altitude)</p>
+                    <p>[35] Air density. (n.d.). In *Wikipedia*. Retrieved from [https://en.wikipedia.org/wiki/Air_density](https://en.wikipedia.org/wiki/Air_density)</p>
+                    <p>[36] International Standard Atmosphere. (n.d.). In *Wikipedia*. Retrieved from [https://en.wikipedia.org/wiki/International_Standard_Atmosphere](https://en.wikipedia.org/wiki/International_Standard_Atmosphere)</p>
+                    <p>[37] Effects of Altitude on Aircraft Performance. (n.d.). *FAA*. (General aviation principles)</p>
+                    <p>[38] Wind and Drone Flight. (n.d.). *DroneDeploy*. (Wind effects on drones)</p>
+                    <p>[39] Kim, H., & Kim, J. (2018). Optimal flight speed for multirotor UAVs in wind. *Journal of Intelligent & Robotic Systems*, 91(1), 161-174. (Research on optimal speeds in wind)</p>
+                    <p>[40] How Wind Affects Drone Flight. (n.d.). *UAV Coach*. (Wind effects on drones)</p>
+                    <p>[41] Kasa, P., & Kasa, S. (2020). Energy consumption of a quadcopter in different wind conditions. *Journal of Physics: Conference Series*, 1489(1), 012010. (Research on wind effects)</p>
+                    <p>[42] Banked turn. (n.d.). In *Wikipedia*. Retrieved from [https://en.wikipedia.org/wiki/Banked_turn](https://en.wikipedia.org/wiki/Banked_turn)</p>
+                    <p>[43] Centripetal force. (n.d.). In *Wikipedia*. Retrieved from [https://en.wikipedia.org/wiki/Centripetal_force](https://en.wikipedia.org/wiki/Centripetal_force)</p>
+                    <p>[44] Flight dynamics. (n.d.). In *Wikipedia*. Retrieved from [https://en.wikipedia.org/wiki/Flight_dynamics](https://en.wikipedia.org/wiki/Flight_dynamics)</p>
+                    <p>[45] Aircraft flight mechanics. (n.d.). In *Wikipedia*. Retrieved from [https://en.wikipedia.org/wiki/Aircraft_flight_mechanics](https://en.wikipedia.org/wiki/Aircraft_flight_mechanics)</p>
+                    <p>[46] Aerodynamics of flight. (n.d.). In *Wikipedia*. Retrieved from [https://en.wikipedia.org/wiki/Aerodynamics_of_flight](https://en.wikipedia.org/wiki/Aerodynamics_of_flight)</p>
+                    <p>[47] Quadcopter control. (n.d.). In *Wikipedia*. Retrieved from [https://en.wikipedia.org/wiki/Quadcopter#Control](https://en.wikipedia.org/wiki/Quadcopter#Control)</p>
+                    <p>[48] Drone Battery Life: How to Maximize It. (n.d.). *Dronefly*. (General battery management)</p>
+                    <p>[49] Energy consumption of multirotor UAVs during various flight maneuvers. (n.d.). *ResearchGate*. (Research on maneuver energy)</p>
+                    <p>[50] Ascent (flight). (n.d.). In *Wikipedia*. Retrieved from [https://en.wikipedia.org/wiki/Ascent_(flight)](https://en.wikipedia.org/wiki/Ascent_(flight))</p>
+                    <p>[51] How Temperature Affects Your Drone Battery. (n.d.). *Drone U*. (Temperature effects on batteries)</p>
+                    <p>[52] Mars Helicopter Ingenuity. (n.d.). *NASA Jet Propulsion Laboratory*. (Ingenuity details)</p>
+                    <p>[53] Propeller selection for drones. (n.d.). *RCGroups*. (General propeller selection)</p>
+                    <p>[54] Battery (electricity). (n.d.). In *Wikipedia*. Retrieved from [https://en.wikipedia.org/wiki/Battery_(electricity)](https://en.wikipedia.org/wiki/Battery_(electricity))</p>
+                    <p>[55] Archer Aviation. (n.d.). *Archer Aviation Official Website*. (Example eVTOL company)</p>
+                    <p>[56] Joby Aviation. (n.d.). *Joby Aviation Official Website*. (Example eVTOL company)</p>
                 </div>
             </section>
         </div>
@@ -259,7 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h4 class="text-lg font-semibold text-slate-800 mt-4 mb-2">Physics and Mathematical Logic: Calm Air</h4>
                 <p>This scenario establishes the fundamental U-shaped power curve.</p>
                 <ul class="list-disc list-inside space-y-2">
-                    <li><strong>Induced Power (P_induced):</strong> Highest at low speeds (hover) and decreases as forward speed increases. This is because at higher speeds, the propellers interact with relatively undisturbed air, making lift generation more efficient.
+                    <li><strong>Induced Power (P_induced):</strong> Highest at low speeds (hover) and decreases as forward speed increases. This is because at higher speeds, the propellers interact with relatively undisturbed air, making lift generation more efficient. This concept is rooted in **momentum theory**, which describes the forces and power involved in accelerating a fluid (air) to produce thrust.
                         <ul>
                             <li><em>Model Logic:</em> 'inducedPower' is calculated based on thrust (T) and an induced velocity, which is high at hover and decreases with increasing 'v_air_ms'.</li>
                         </ul>
@@ -455,7 +671,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const profilePower = droneParams.profilePowerConstant * (scenarioParams.profilePowerFactor || 1);
 
         // System Power: Assumed constant
-        const systemPower = droneParams.systemPower; // Fixed: Changed from drone.systemPower
+        const systemPower = droneParams.systemPower; 
 
         // Vertical Movement Power (additional component)
         const verticalPower = (scenarioParams.verticalSpeed_ms || 0) * T; // P = F * V
