@@ -62,7 +62,7 @@
             transition: max-height 0.3s ease-out;
         }
         .collapsible-content.expanded {
-            max-height: 500px; /* Adjust based on content size */
+            max-height: 1000px; /* Increased to accommodate more text */
             transition: max-height 0.5s ease-in;
         }
     </style>
@@ -72,7 +72,7 @@
     <div class="container mx-auto p-4 sm:p-6 lg:p-8">
 
         <header class="text-center mb-10">
-            <h1 class="text-3xl sm:text-4xl font-bold text-slate-900">Quadcopter Flight Performance deep Dive</h1>
+            <h1 class="text-3xl sm:text-4xl font-bold text-slate-900">Quadcopter Flight Performance Deep Dive</h1>
             <p class="mt-2 text-lg text-slate-600">Analyzing Speed, Power, and Range for a 5m 1-Seater eVTOL</p>
         </header>
 
@@ -97,7 +97,7 @@
 
                     <div class="bg-slate-50 p-4 rounded-lg">
                         <h3 class="text-xl font-semibold text-slate-800 flex justify-between items-center cursor-pointer" onclick="toggleCollapsible('inducedPower')">
-                            1. Induced Power
+                            1. Induced Power (P_induced)
                             <span class="text-indigo-600 toggle-icon">▼</span>
                         </h3>
                         <div id="inducedPower" class="collapsible-content">
@@ -107,7 +107,7 @@
 
                     <div class="bg-slate-50 p-4 rounded-lg">
                         <h3 class="text-xl font-semibold text-slate-800 flex justify-between items-center cursor-pointer" onclick="toggleCollapsible('parasiticPower')">
-                            2. Parasitic Power
+                            2. Parasitic Power (P_parasitic)
                             <span class="text-indigo-600 toggle-icon">▼</span>
                         </h3>
                         <div id="parasiticPower" class="collapsible-content">
@@ -117,7 +117,7 @@
 
                     <div class="bg-slate-50 p-4 rounded-lg">
                         <h3 class="text-xl font-semibold text-slate-800 flex justify-between items-center cursor-pointer" onclick="toggleCollapsible('profilePower')">
-                            3. Profile Power
+                            3. Profile Power (P_profile)
                             <span class="text-indigo-600 toggle-icon">▼</span>
                         </h3>
                         <div id="profilePower" class="collapsible-content">
@@ -127,7 +127,7 @@
 
                     <div class="bg-slate-50 p-4 rounded-lg">
                         <h3 class="text-xl font-semibold text-slate-800 flex justify-between items-center cursor-pointer" onclick="toggleCollapsible('systemPower')">
-                            4. System Power
+                            4. System Power (P_system)
                             <span class="text-indigo-600 toggle-icon">▼</span>
                         </h3>
                         <div id="systemPower" class="collapsible-content">
@@ -183,10 +183,14 @@
                         </div>
                     </div>
 
-                    <!-- Chart -->
-                    <div class="lg:col-span-2">
+                    <!-- Chart and Detailed Physics Display -->
+                    <div class="lg:col-span-2 flex flex-col space-y-6">
                         <div class="chart-container">
                             <canvas id="power-chart"></canvas>
+                        </div>
+                        <!-- New div for detailed physics, initially hidden -->
+                        <div id="detailed-physics-display" class="bg-slate-50 rounded-lg p-6 hidden">
+                            <!-- Content will be dynamically loaded here -->
                         </div>
                     </div>
                 </div>
@@ -235,10 +239,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const analysisText = document.getElementById('analysis-text');
     const enduranceSpeedEl = document.getElementById('endurance-speed');
     const rangeSpeedEl = document.getElementById('range-speed');
+    const detailedPhysicsDisplay = document.getElementById('detailed-physics-display'); // Get the new div
 
     let currentScenario = 'calm';
     
-    // Function to toggle collapsible content
+    // Function to toggle collapsible content (for the top Physics Breakdown section)
     window.toggleCollapsible = (id) => {
         const element = document.getElementById(id);
         const icon = element.previousElementSibling.querySelector('.toggle-icon');
@@ -249,35 +254,163 @@ document.addEventListener('DOMContentLoaded', () => {
     const analysisContent = {
         calm: {
             title: 'Flying in Calm Air: The Fundamental Trade-off',
-            text: `In ideal, still air, the drone's performance is governed by a fundamental trade-off between **induced power** and **parasitic power**. As explained in the physics breakdown, induced power dominates at low speeds, while parasitic power becomes significant at higher speeds. The U-shaped total power curve reflects this, showing a minimum power point for endurance and a specific speed for optimal range. This scenario represents the baseline for all performance calculations.`
+            text: `In ideal, still air, the drone's performance is governed by a fundamental trade-off between **induced power** and **parasitic power**. As explained in the physics breakdown, induced power dominates at low speeds, while parasitic power becomes significant at higher speeds. The U-shaped total power curve reflects this, showing a minimum power point for endurance and a specific speed for optimal range. This scenario represents the baseline for all performance calculations.`,
+            detailedPhysics: `
+                <h4 class="text-lg font-semibold text-slate-800 mt-4 mb-2">Physics and Mathematical Logic: Calm Air</h4>
+                <p>This scenario establishes the fundamental U-shaped power curve.</p>
+                <ul class="list-disc list-inside space-y-2">
+                    <li><strong>Induced Power (P_induced):</strong> Highest at low speeds (hover) and decreases as forward speed increases. This is because at higher speeds, the propellers interact with relatively undisturbed air, making lift generation more efficient.
+                        <ul>
+                            <li><em>Model Logic:</em> 'inducedPower' is calculated based on thrust (T) and an induced velocity, which is high at hover and decreases with increasing 'v_air_ms'.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Parasitic Power (P_parasitic):</strong> Negligible at low speeds and increases rapidly (cubed relationship) with forward speed. This is due to air resistance on the drone's body.
+                        <ul>
+                            <li><em>Model Logic:</em> P_parasitic = 0.5 * airDensity * dragCoefficient * frontalArea * v_air_ms^3.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Profile Power (P_profile) & System Power (P_system):</strong> Treated as constants in this simplified model.</li>
+                </ul>
+                <p class="mt-2"><strong>Mathematical Formulae (Simplified in JS):</strong></p>
+                <ul class="list-disc list-inside">
+                    <li>v_air_ms = v_ms (ground speed equals airspeed)</li>
+                    <li>loadFactor = 1</li>
+                    <li>airDensityFactor = 1</li>
+                    <li>profilePowerFactor = 1</li>
+                    <li>verticalSpeed_ms = 0</li>
+                </ul>
+                <p class="mt-2"><strong>Impact:</strong> Shows the theoretical maximum endurance (lowest point on total power curve) and maximum range (tangent from origin to total power curve) speeds.</p>
+            `
         },
         headwind: {
             title: 'Headwind (20 km/h): Reduced Ground Performance',
-            text: `Flying into a **headwind** significantly reduces both ground range and flight time. To maintain a specific ground speed, the drone must achieve a higher **airspeed** (ground speed + headwind speed). This dramatically increases parasitic drag and its associated power consumption (proportional to the cube of airspeed). Consequently, the drone burns energy much faster, and its ability to cover distance over the ground is severely hampered. The optimal speed for maximum range (relative to the ground) will effectively shift to a higher airspeed, but the achievable ground range will be much lower than in calm air.`
+            text: `Flying into a **headwind** significantly reduces both ground range and flight time. To maintain a specific ground speed, the drone must achieve a higher **airspeed** (ground speed + headwind speed). This dramatically increases parasitic drag and its associated power consumption (proportional to the cube of airspeed). Consequently, the drone burns energy much faster, and its ability to cover distance over the ground is severely hampered. The optimal speed for maximum range (relative to the ground) will effectively shift to a higher airspeed, but the achievable ground range will be much lower than in calm air.`,
+            detailedPhysics: `
+                <h4 class="text-lg font-semibold text-slate-800 mt-4 mb-2">Physics and Mathematical Logic: Headwind</h4>
+                <p>To maintain a specific ground speed, the drone's airspeed must increase. Since parasitic drag is proportional to airspeed cubed, this significantly increases power consumption.</p>
+                <p class="mt-2"><strong>Mathematical Formulae (Modified in JS):</strong></p>
+                <ul class="list-disc list-inside">
+                    <li>v_air_ms = v_ms + (20 * 1000 / 3600) (airspeed = ground speed + headwind speed)</li>
+                    <li>Other parameters remain as in 'Calm Air'.</li>
+                </ul>
+                <p class="mt-2"><strong>Impact:</strong></p>
+                <ul class="list-disc list-inside">
+                    <li><strong>Power:</strong> Dramatically higher for a given ground speed, especially at higher ground speeds.</li>
+                    <li><strong>Range/Time:</strong> Significantly reduced. The optimal ground speed for range might be slightly higher to "push through" the wind more effectively, but the overall achievable range will be much less.</li>
+                </ul>
+            `
         },
         tailwind: {
             title: 'Tailwind (20 km/h): Enhanced Ground Performance',
-            text: `A **tailwind** provides a significant advantage, potentially increasing both range and endurance, especially for maximizing ground covered. To maintain a given ground speed, the drone needs a lower **airspeed** (ground speed - tailwind speed). This substantially reduces parasitic drag and power consumption, as the "free" push from the wind means less energy is expended to overcome air resistance. This allows the drone to fly farther and longer on the same amount of battery energy. The optimal flight speed relative to the air will be lower to maximize time spent leveraging the favorable air mass.`
+            text: `A **tailwind** provides a significant advantage, potentially increasing both range and endurance, especially for maximizing ground covered. To maintain a given ground speed, the drone needs a lower **airspeed** (ground speed - tailwind speed). This substantially reduces parasitic drag and power consumption, as the "free" push from the wind means less energy is expended to overcome air resistance. This allows the drone to fly farther and longer on the same amount of battery energy. The optimal flight speed relative to the air will be lower to maximize time spent leveraging the favorable air mass.`,
+            detailedPhysics: `
+                <h4 class="text-lg font-semibold text-slate-800 mt-4 mb-2">Physics and Mathematical Logic: Tailwind</h4>
+                <p>To maintain a specific ground speed, the drone's airspeed can decrease. This reduction in airspeed significantly lowers parasitic drag and power consumption.</p>
+                <p class="mt-2"><strong>Mathematical Formulae (Modified in JS):</strong></p>
+                <ul class="list-disc list-inside">
+                    <li>v_air_ms = v_ms - (20 * 1000 / 3600) (airspeed = ground speed - tailwind speed)</li>
+                    <li>Other parameters remain as in 'Calm Air'.</li>
+                </ul>
+                <p class="mt-2"><strong>Impact:</strong></p>
+                <ul class="list-disc list-inside">
+                    <li><strong>Power:</strong> Significantly lower for a given ground speed.</li>
+                    <li><strong>Range/Time:</strong> Greatly increased, as the drone gets a "free push." The optimal airspeed for range will be lower than in calm air, maximizing the time spent benefiting from the tailwind.</li>
+                </ul>
+            `
         },
         turn: {
             title: 'Performing a Standard Turn: Increased Power Demand',
-            text: `During a **turn**, the quadcopter must **bank**. To maintain altitude during this maneuver, the propellers must generate more **total thrust** than in straight-and-level flight. This increased thrust is necessary because the lift vector is tilted inward to provide the horizontal **centripetal force** required for the turn, in addition to the vertical component needed to counteract gravity. This higher thrust requirement translates directly to significantly **increased power consumption** across all speeds. Tighter turns demand greater bank angles and thus consume even more power, making them energy-intensive maneuvers.`
+            text: `During a **turn**, the quadcopter must **bank**. To maintain altitude during this maneuver, the propellers must generate more **total thrust** than in straight-and-level flight. This increased thrust is necessary because the lift vector is tilted inward to provide the horizontal **centripetal force** required for the turn, in addition to the vertical component needed to counteract gravity. This higher thrust requirement translates directly to significantly **increased power consumption** across all speeds. Tighter turns demand greater bank angles and thus consume even more power, making them energy-intensive maneuvers.`,
+            detailedPhysics: `
+                <h4 class="text-lg font-semibold text-slate-800 mt-4 mb-2">Physics and Mathematical Logic: Standard Turn</h4>
+                <p>When banking, the lift vector (total thrust) is tilted. To maintain altitude, the vertical component of this tilted lift must still equal the drone's weight. This means the total thrust generated by the propellers must be greater than the drone's weight. This increased thrust demand directly translates to higher power consumption. The "load factor" increases.</p>
+                <p class="mt-2"><strong>Mathematical Formulae (Modified in JS):</strong></p>
+                <ul class="list-disc list-inside">
+                    <li>loadFactor = 1.2 (simulating approximately a 40-degree bank turn, where Load Factor = 1 / cos(bank angle))</li>
+                    <li>This 'loadFactor' directly multiplies the drone's effective weight in the thrust calculation T = droneParams.weight * g * loadFactor.</li>
+                    <li>Other parameters remain as in 'Calm Air'.</li>
+                </ul>
+                <p class="mt-2"><strong>Impact:</strong></p>
+                <ul class="list-disc list-inside">
+                    <li><strong>Power:</strong> Higher across all speeds due to increased thrust requirement.</li>
+                    <li><strong>Range/Time:</strong> Reduced due to constant higher power draw during the turn.</li>
+                </ul>
+            `
         },
         turbulence: {
             title: 'Wind Turbulence: Reduced Efficiency and Control Effort',
-            text: `**Wind turbulence** (e.g., strong gusts, erratic air currents) adds significant complexity and power consumption. The drone's flight controller and motors must constantly and rapidly adjust their thrust output to maintain stability and altitude in an unpredictable environment. This continuous, dynamic acceleration and deceleration of the propellers is inherently inefficient. Instead of steady, optimized thrust, there's a lot of wasted energy due to inertia, motor response times, and increased blade loading. This "control effort" power reduces overall efficiency, thereby decreasing both flight time and achievable range.`
+            text: `**Wind turbulence** (e.g., strong gusts, erratic air currents) adds significant complexity and power consumption. The drone's flight controller and motors must constantly and rapidly adjust their thrust output to maintain stability and altitude in an unpredictable environment. This continuous, dynamic acceleration and deceleration of the propellers is inherently inefficient. Instead of steady, optimized thrust, there's a lot of wasted energy due to inertia, motor response times, and increased blade loading. This "control effort" power reduces overall efficiency, thereby decreasing both flight time and achievable range.`,
+            detailedPhysics: `
+                <h4 class="text-lg font-semibold text-slate-800 mt-4 mb-2">Physics and Mathematical Logic: Turbulence</h4>
+                <p>The drone's flight controller must constantly make rapid, small adjustments to motor thrust and propeller RPM to maintain stability and desired trajectory. These continuous accelerations and decelerations of the motors and propellers are inefficient. Energy is lost in overcoming inertia and through less-than-optimal thrust generation. This is modeled as an an increase in both the profile power (due to fluctuating blade loading) and a slight increase in effective thrust (load factor) due to constant control effort.</p>
+                <p class="mt-2"><strong>Mathematical Formulae (Modified in JS):</strong></p>
+                <ul class="list-disc list-inside">
+                    <li>profilePowerFactor = 1.3 (30% increase in profile power to account for inefficiencies from rapid RPM changes)</li>
+                    <li>loadFactor = 1.1 (10% increase in effective thrust demand due to constant control inputs)</li>
+                    <li>Other parameters remain as in 'Calm Air'.</li>
+                </ul>
+                <p class="mt-2"><strong>Impact:</strong></p>
+                <ul class="list-disc list-inside">
+                    <li><strong>Power:</strong> Higher across all speeds due to constant control effort and inefficient thrust generation.</li>
+                    <li><strong>Range/Time:</strong> Reduced.</li>
+                </ul>
+            `
         },
         altitude: {
             title: 'High Altitude (2000m): Reduced Air Density Challenges',
-            text: `At **higher altitudes**, the air density is significantly lower. This presents a challenge for propellers: to generate the same amount of thrust (required to counteract the drone's weight), the propellers must spin **much faster** in thinner air. Spinning faster requires more power from the motors. While parasitic drag might slightly decrease due to less dense air, the increased power required for thrust generation typically outweighs this benefit. Consequently, flying at high altitudes leads to **higher power consumption** for a given lift requirement, reducing endurance and range.`
+            text: `At **higher altitudes**, the air density is significantly lower. This presents a challenge for propellers: to generate the same amount of thrust (required to counteract the drone's weight), the propellers must spin **much faster** in thinner air. Spinning faster requires more power from the motors. While parasitic drag might slightly decrease due to less dense air, the increased power required for thrust generation typically outweighs this benefit. Consequently, flying at high altitudes leads to **higher power consumption** for a given lift requirement, reducing endurance and range.`,
+            detailedPhysics: `
+                <h4 class="text-lg font-semibold text-slate-800 mt-4 mb-2">Physics and Mathematical Logic: High Altitude</h4>
+                <p>At higher altitudes, the air density is significantly lower. To generate the same amount of thrust (required to counteract the drone's weight), the propellers must spin much faster in thinner air. Spinning faster requires more power from the motors.</p>
+                <p class="mt-2"><strong>Mathematical Formulae (Modified in JS):</strong></p>
+                <ul class="list-disc list-inside">
+                    <li>airDensityFactor = 0.9 (Approx air density at 2000m, around 80% of sea level, simplified to 0.9 for effect. This factor multiplies the base 'airDensity' in power calculations.)</li>
+                    <li>Other parameters remain as in 'Calm Air'.</li>
+                </ul>
+                <p class="mt-2"><strong>Impact:</strong></p>
+                <ul class="list-disc list-inside">
+                    <li><strong>Power:</strong> Increased across all speeds due to reduced air density requiring more power for lift.</li>
+                    <li><strong>Range/Time:</strong> Reduced.</li>
+                </ul>
+            `
         },
         ascent: {
             title: 'Ascent (2 m/s): Overcoming Gravity and Increasing Potential Energy',
-            text: `During **ascent**, the drone must generate additional thrust not only to counteract its weight but also to provide an upward force to increase its potential energy. This means the total power required is the sum of the power for level flight at that speed, plus the power needed for vertical movement. This additional power requirement is directly proportional to the rate of climb. Thus, climbing steeply (at a high vertical speed) demands significantly more power, temporarily reducing effective flight time and range for that segment of the flight.`
+            text: `During **ascent**, the drone must generate additional thrust not only to counteract its weight but also to provide an upward force to increase its potential energy. This means the total power required is the sum of the power for level flight at that speed, plus the power needed for vertical movement. This additional power requirement is directly proportional to the rate of climb. Thus, climbing steeply (at a high vertical speed) demands significantly more power, temporarily reducing effective flight time and range for that segment of the flight.`,
+            detailedPhysics: `
+                <h4 class="text-lg font-semibold text-slate-800 mt-4 mb-2">Physics and Mathematical Logic: Ascent</h4>
+                <p>During ascent, the drone must generate additional thrust to counteract its weight AND provide an upward force to increase its potential energy. The power required for vertical movement is P_vertical = Force * Vertical_Speed.</p>
+                <p class="mt-2"><strong>Mathematical Formulae (Modified in JS):</strong></p>
+                <ul class="list-disc list-inside">
+                    <li>verticalSpeed_ms = 2 (2 m/s ascent rate)</li>
+                    <li>The 'verticalPower' component is added to the total power calculation: verticalPower = (verticalSpeed_ms) * Thrust.</li>
+                    <li>Other parameters remain as in 'Calm Air'.</li>
+                </ul>
+                <p class="mt-2"><strong>Impact:</strong></p>
+                <ul class="list-disc list-inside">
+                    <li><strong>Power:</strong> Significantly increased due to the energy required for vertical motion.</li>
+                    <li><strong>Range/Time:</strong> Reduced for the duration of the ascent.</li>
+                </ul>
+            `
         },
         descent: {
             title: 'Descent (2 m/s): Gravity Assistance and Power Reduction',
-            text: `During a **descent**, gravity assists the drone, meaning the propellers need to generate less thrust than the drone's weight to control the rate of fall. This reduction in thrust demand leads to **decreased power consumption**. In some cases, with very specific propeller designs and flight profiles, a drone can even enter a state similar to autorotation (though less pronounced than a helicopter), where air flowing up through the rotors helps maintain their spin. This makes descent a relatively energy-efficient maneuver, and in certain scenarios, controlled descents can help conserve battery for later flight phases.`
+            text: `During a **descent**, gravity assists the drone, meaning the propellers need to generate less thrust than the drone's weight to control the rate of fall. This reduction in thrust demand leads to **decreased power consumption**. In some cases, with very specific propeller designs and flight profiles, a drone can even enter a state similar to autorotation (though less pronounced than a helicopter), where air flowing up through the rotors helps maintain their spin. This makes descent a relatively energy-efficient maneuver, and in certain scenarios, controlled descents can help conserve battery for later flight phases.`,
+            detailedPhysics: `
+                <h4 class="text-lg font-semibold text-slate-800 mt-4 mb-2">Physics and Mathematical Logic: Descent</h4>
+                <p>During a controlled descent, gravity assists the downward motion. The required thrust from the propellers is less than the vehicle's weight. The induced power decreases with the descent rate. This leads to decreased power consumption.</p>
+                <p class="mt-2"><strong>Mathematical Formulae (Modified in JS):</strong></p>
+                <ul class="list-disc list-inside">
+                    <li>verticalSpeed_ms = -2 (2 m/s descent rate. A negative value reduces the total power calculation.)</li>
+                    <li>The 'verticalPower' component is calculated as: verticalPower = (verticalSpeed_ms) * Thrust. Since 'verticalSpeed_ms' is negative, this component effectively reduces the total power.</li>
+                    <li>Other parameters remain as in 'Calm Air'.</li>
+                </ul>
+                <p class="mt-2"><strong>Impact:</strong></p>
+                <ul class="list-disc list-inside">
+                    <li><strong>Power:</strong> Decreased, as gravity assists the motion.</li>
+                    <li><strong>Range/Time:</strong> Can be extended or conserved during efficient descent phases.</li>
+                </ul>
+            `
         }
     };
 
@@ -305,17 +438,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let v_air_ms = v_ms + (scenarioParams.windSpeed_ms || 0);
         v_air_ms = Math.max(0.1, v_air_ms); // Ensure positive for calculations, avoid division by zero
 
-        // Induced Power: P_induced = T * sqrt(T / (2 * rho * A)) / V_airspeed (simplified, more accurately T*v_induced)
-        // Here, using a common approximation: P_induced = T * v_hover_induced * (1 + (v_airspeed/v_hover_induced)^2)^0.5 where v_hover_induced is sqrt(T/(2*rho*A))
-        // Or simpler, P_induced = T^1.5 / sqrt(2 * rho * A * V_airspeed) if V_airspeed is large, and more complex at low speeds.
-        // Let's use a model that captures the high-at-hover, decreasing-with-speed aspect.
-        // For simplicity for this demo, we'll model induced power as inversely proportional to V_airspeed
-        // A more robust model would be P_induced = T * V_induced, where V_induced is the induced velocity.
-        // V_induced ~ T / (2 * rho * A * V_airspeed) or sqrt(T / (2 * rho * A)) for hover.
-        // Let's simplify and use the common form: P_induced = T * sqrt(T / (2 * droneParams.airDensity * droneParams.rotorArea * V_air_ms)) but ensure it's high at low speeds.
-        // A common empirical model is P_induced = C1/V + C2*V^3. This is what the chart implies for total power.
-        // We'll calculate induced power more directly from thrust and a simplified induced velocity.
-
         const v_induced_hover = Math.sqrt(T / (2 * (droneParams.airDensity * (scenarioParams.airDensityFactor || 1)) * droneParams.rotorArea));
         let inducedVelocity = v_induced_hover; // At hover
         if (v_air_ms > 0) {
@@ -333,7 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const profilePower = droneParams.profilePowerConstant * (scenarioParams.profilePowerFactor || 1);
 
         // System Power: Assumed constant
-        const systemPower = droneParams.systemPower;
+        const systemPower = droneParams.systemPower; // Fixed: Changed from drone.systemPower
 
         // Vertical Movement Power (additional component)
         const verticalPower = (scenarioParams.verticalSpeed_ms || 0) * T; // P = F * V
@@ -472,7 +594,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateAnalysisContent() {
         const content = analysisContent[currentScenario];
-        analysisText.innerHTML = `<h3 class="text-xl font-semibold text-slate-800 mb-2">${content.title}</h3><p>${content.text}</p>`;
+        
+        // Update the summary analysis text section (below the simulator)
+        analysisText.innerHTML = `
+            <h3 class="text-xl font-semibold text-slate-800 mb-2">${content.title}</h3>
+            <p>${content.text}</p>
+            <button id="show-detailed-physics-btn" class="mt-4 px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition">
+                Show Detailed Physics & Logic
+            </button>
+        `;
+
+        // Populate the detailed physics display area (next to the chart)
+        detailedPhysicsDisplay.innerHTML = `
+            <h3 class="text-xl font-semibold text-slate-800 mb-2">Detailed Physics for: ${content.title}</h3>
+            ${content.detailedPhysics}
+            <button id="hide-detailed-physics-btn" class="mt-4 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition">
+                Hide Detailed Physics
+            </button>
+        `;
+
+        // Add event listeners for the new buttons
+        const showBtn = document.getElementById('show-detailed-physics-btn');
+        const hideBtn = document.getElementById('hide-detailed-physics-btn');
+
+        if (showBtn) {
+            showBtn.onclick = () => {
+                detailedPhysicsDisplay.classList.remove('hidden');
+                showBtn.classList.add('hidden'); // Hide the show button after click
+            };
+        }
+        if (hideBtn) {
+            hideBtn.onclick = () => {
+                detailedPhysicsDisplay.classList.add('hidden');
+                showBtn.classList.remove('hidden'); // Show the show button again
+            };
+        }
+        
+        // Ensure detailed physics is hidden initially when a new scenario is selected
+        detailedPhysicsDisplay.classList.add('hidden');
     }
 
     function initChart() {
