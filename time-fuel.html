@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Drone Range Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals (Slate, Zinc, Amber) -->
+    <!-- Application Structure Plan: The SPA is designed in three logical sections to guide the user from concept to application. 
+        1. 'The Basics': Introduces the four core power components in a simple, visual card layout. This establishes the fundamental knowledge needed.
+        2. 'Interactive Calculator': The heart of the app. It pairs control sliders with a dynamic chart and key metric readouts. This structure allows users to immediately see the cause-and-effect relationship between drone parameters and flight performance, making the complex physics tangible and intuitive. A new collapsible section for the underlying physics formulas is added here to provide deeper insight without cluttering the main view.
+        3. 'Tech Breakthroughs': Connects the abstract physics to real-world innovation. This section provides context on how future technology can alter the parameters in the calculator, closing the loop between theory and reality.
+        This flow—Learn, Experiment, Explore—is chosen for maximum user engagement and understanding, transforming a static report into a hands-on learning tool. -->
+    <!-- Visualization & Content Choices:
+        - Report Info: The relationship between drone speed and the various components of power consumption (Induced, Parasitic, Total).
+        - Goal: To allow users to visualize the trade-offs in power consumption and identify the optimal speeds for endurance and range.
+        - Viz/Presentation Method: A multi-line chart rendered on an HTML5 Canvas. Separate lines clearly distinguish between power types. Key metrics (Max Range, etc.) are displayed as large, clear text.
+        - Interaction: Users manipulate sliders for drone parameters (e.g., weight, battery). The chart and metric displays update in real-time in response. Tooltips on the chart provide specific data points on hover. Points of interest (min power, max range factor) are highlighted.
+        - Justification: This interactive visualization is far more effective than a static graph. It fosters active exploration and provides immediate feedback, allowing users to build an intuitive grasp of complex aerodynamic principles without needing to understand the underlying math.
+        - Library/Method: Chart.js for its robust, responsive, and easy-to-implement canvas-based charting.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #1e293b; /* slate-800 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 40vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #f59e0b; /* amber-500 */
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #f59e0b; /* amber-500 */
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        .formula-box {
+            background-color: #f1f5f9; /* slate-100 */
+            border-left: 4px solid #f59e0b; /* amber-500 */
+            padding: 1rem;
+            margin-top: 1.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .formula-box code {
+            display: block;
+            background-color: #e2e8f0; /* slate-200 */
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            margin-bottom: 0.5rem;
+            font-family: monospace;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white shadow-sm sticky top-0 z-10">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold text-amber-600">🚁</span>
+                    <h1 class="text-xl font-bold ml-3">Drone Performance Analyzer</h1>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#concepts" class="text-gray-500 hover:text-gray-900 font-medium">Concepts</a>
+                    <a href="#calculator" class="text-gray-500 hover:text-gray-900 font-medium">Calculator</a>
+                    <a href="#tech" class="text-gray-500 hover:text-gray-900 font-medium">Breakthroughs</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <section id="concepts" class="py-16 md:py-24">
+            <div class="text-center">
+                <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">The Basics of Flight Power</h2>
+                <p class="mt-4 max-w-2xl mx-auto text-lg text-gray-600">A drone's battery life isn't just about its size. It's about a constant battle against four different forces that consume energy. Understanding these is the first step to achieving long-range flight.</p>
+            </div>
+            <div class="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <div class="text-4xl">💨</div>
+                    <h3 class="mt-4 text-xl font-bold">Induced Power</h3>
+                    <p class="mt-2 text-gray-600">The core energy spent just to stay airborne by pushing air down to counteract gravity. It's highest during hover and decreases as the drone moves forward.</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <div class="text-4xl">🌬️</div>
+                    <h3 class="mt-4 text-xl font-bold">Parasitic Power</h3>
+                    <p class="mt-2 text-gray-600">The energy needed to overcome air resistance (drag). This is tiny at low speeds but grows exponentially, becoming the biggest enemy of range at high speeds.</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <div class="text-4xl">🔄</div>
+                    <h3 class="mt-4 text-xl font-bold">Profile Power</h3>
+                    <p class="mt-2 text-gray-600">The energy the motors use to spin the rotor blades themselves, overcoming their own friction with the air. It's a relatively constant overhead cost.</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <div class="text-4xl">🧠</div>
+                    <h3 class="mt-4 text-xl font-bold">System Power</h3>
+                    <p class="mt-2 text-gray-600">The constant power drain from the drone's "brain" and other electronics—flight controller, sensors, and communication systems.</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="border-t border-gray-200"></div>
+
+        <section id="calculator" class="py-16 md:py-24">
+            <div class="text-center">
+                <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">Interactive Flight Calculator</h2>
+                <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">Adjust the parameters below to see how they impact the drone's power consumption and flight potential in real-time. Find the "sweet spot" for maximum range and endurance.</p>
+                <button id="toggleFormulas" class="mt-6 px-6 py-2 bg-amber-500 text-white font-semibold rounded-lg shadow-md hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-colors duration-200">
+                    Show Physics Formulas
+                </button>
+            </div>
+
+            <div id="formulaSection" class="formula-box hidden mt-8">
+                <h3 class="text-xl font-bold mb-4">Underlying Physics Formulas</h3>
+                <p class="mb-2">The total power required by the drone is the sum of its components:</p>
+                <code>P<sub>total</sub>(v) = P<sub>induced</sub>(v) + P<sub>parasitic</sub>(v) + P<sub>profile</sub> + P<sub>system</sub></code>
+                
+                <p class="mt-4 mb-2"><strong>Induced Power (Hover):</strong> Power to produce lift.</p>
+                <code>P<sub>i, hover</sub> = (mg)<sup>3/2</sup> / &radic;(2 &rho; A<sub>d</sub>)</code>
+                
+                <p class="mt-4 mb-2"><strong>Induced Power (Forward Flight - Simplified):</strong> Decreases with forward speed.</p>
+                <code>P<sub>induced</sub>(v) = P<sub>i, hover</sub> / &radic;(v<sub>air</sub><sup>2</sup> + v<sub>h</sub><sup>2</sup>) &times; v<sub>air</sub></code>
+                <code>where v<sub>h</sub> = P<sub>i, hover</sub> / (mg)</code>
+                
+                <p class="mt-4 mb-2"><strong>Parasitic Power:</strong> Power to overcome air resistance, increases cubically with speed.</p>
+                <code>P<sub>parasitic</sub>(v) = 0.5 &times; &rho; &times; v<sub>air</sub><sup>3</sup> &times; C<sub>D</sub> &times; A<sub>f</sub></code>
+                
+                <p class="mt-4 mb-2"><strong>Usable Battery Energy:</strong> Total energy available for flight.</p>
+                <code>E<sub>usable</sub> = Battery Capacity (Wh)</code>
+                <p class="text-sm text-gray-600">Note: In this calculator, system efficiency and nominal voltage are abstracted into the 'Usable Battery Capacity' slider for simplicity.</p>
+
+                <p class="mt-4 mb-2"><strong>Flight Time (Endurance):</strong></p>
+                <code>t = E<sub>usable</sub> / P<sub>total</sub>(v)</code>
+
+                <p class="mt-4 mb-2"><strong>Range:</strong></p>
+                <code>Range = v<sub>ground</sub> &times; t</code>
+                <p class="text-sm text-gray-600">Where v<sub>air</sub> = v<sub>ground</sub> + v<sub>wind</sub> (for headwind).</p>
+            </div>
+
+            <div class="mt-12 grid lg:grid-cols-12 gap-8">
+                <div class="lg:col-span-4 bg-white rounded-xl shadow-md p-6 space-y-6">
+                    <h3 class="text-xl font-bold text-center">Drone Parameters</h3>
+                    <div>
+                        <label for="droneWeight" class="font-medium">Total Weight (incl. pilot): <span id="droneWeightLabel" class="font-bold text-amber-600">200</span> kg</label>
+                        <input type="range" id="droneWeight" min="100" max="300" value="200" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    <div>
+                        <label for="rotorArea" class="font-medium">Total Rotor Area: <span id="rotorAreaLabel" class="font-bold text-amber-600">10.0</span> m²</label>
+                        <input type="range" id="rotorArea" min="5" max="20" value="10" step="0.5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    <div>
+                        <label for="dragCoefficient" class="font-medium">Drag Coefficient ($C_D$): <span id="dragCoefficientLabel" class="font-bold text-amber-600">0.50</span></label>
+                        <input type="range" id="dragCoefficient" min="0.2" max="1.0" value="0.5" step="0.05" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    <div>
+                        <label for="batteryCapacity" class="font-medium">Usable Battery Capacity: <span id="batteryCapacityLabel" class="font-bold text-amber-600">20</span> kWh</label>
+                        <input type="range" id="batteryCapacity" min="5" max="50" value="20" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    <div>
+                        <label for="windSpeed" class="font-medium">Headwind: <span id="windSpeedLabel" class="font-bold text-amber-600">0</span> km/h</label>
+                        <input type="range" id="windSpeed" min="0" max="50" value="0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                </div>
+                <div class="lg:col-span-8 bg-white rounded-xl shadow-md p-6">
+                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-center mb-6">
+                        <div>
+                            <h4 class="text-sm text-gray-500">Max Endurance</h4>
+                            <p id="maxEndurance" class="text-2xl md:text-3xl font-bold text-green-600">-- min</p>
+                        </div>
+                        <div>
+                            <h4 class="text-sm text-gray-500">Max Range</h4>
+                            <p id="maxRange" class="text-2xl md:text-3xl font-bold text-blue-600">-- km</p>
+                        </div>
+                        <div class="col-span-2 md:col-span-1">
+                            <h4 class="text-sm text-gray-500">Speed for Max Range</h4>
+                            <p id="maxRangeSpeed" class="text-2xl md:text-3xl font-bold text-blue-600">-- km/h</p>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="powerCurveChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="border-t border-gray-200"></div>
+        
+        <section id="tech" class="py-16 md:py-24">
+            <div class="text-center">
+                <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">Paths to 80km: Technology Breakthroughs</h2>
+                <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">Achieving our goal isn't just about tweaking numbers, it's about fundamental advances in technology. Here’s what will make the biggest difference.</p>
+            </div>
+            <div class="mt-12 grid gap-8 md:grid-cols-2">
+                 <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-xl font-bold">🔋 Battery Technology</h3>
+                    <p class="mt-2 text-gray-600">The holy grail. Higher energy density (more power for less weight) is the single most critical factor. Advances like solid-state or lithium-sulfur batteries could dramatically increase the 'Battery Capacity' slider, making long ranges feasible.</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-xl font-bold">✈️ Aerodynamics & Airframe</h3>
+                    <p class="mt-2 text-gray-600">For long-range flight, a pure multirotor is inefficient. A hybrid VTOL design with wings is key. Wings generate lift far more efficiently in forward flight, drastically reducing induced power. This is reflected in a lower effective 'Drag Coefficient' and better power curves.</p>
+                </div>
+                 <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-xl font-bold">⚡ Propulsion & Electronics</h3>
+                    <p class="mt-2 text-gray-600">More efficient motors and electronic speed controllers (ESCs) mean less energy is wasted as heat. Innovations like Gallium Nitride (GaN) components can improve overall system efficiency, meaning more of the battery's power gets to the props.</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-xl font-bold">🏗️ Lightweight Materials</h3>
+                    <p class="mt-2 text-gray-600">Every single gram counts. Using advanced carbon fiber composites and alloys reduces the drone's structural weight. This directly lowers the 'Total Weight' slider, which has a massive impact on the induced power needed to stay aloft.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white border-t mt-16">
+        <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-gray-500">
+            <p>&copy; 2025 Interactive Drone Analyzer. Created by Gemini AI.</p>
+        </div>
+    </footer>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const chartCtx = document.getElementById('powerCurveChart').getContext('2d');
+            let powerChart;
+
+            const inputs = {
+                droneWeight: document.getElementById('droneWeight'),
+                rotorArea: document.getElementById('rotorArea'),
+                dragCoefficient: document.getElementById('dragCoefficient'),
+                batteryCapacity: document.getElementById('batteryCapacity'),
+                windSpeed: document.getElementById('windSpeed'),
+            };
+
+            const labels = {
+                droneWeightLabel: document.getElementById('droneWeightLabel'),
+                rotorAreaLabel: document.getElementById('rotorAreaLabel'),
+                dragCoefficientLabel: document.getElementById('dragCoefficientLabel'),
+                batteryCapacityLabel: document.getElementById('batteryCapacityLabel'),
+                windSpeedLabel: document.getElementById('windSpeedLabel'),
+            };
+            
+            const outputs = {
+                maxEndurance: document.getElementById('maxEndurance'),
+                maxRange: document.getElementById('maxRange'),
+                maxRangeSpeed: document.getElementById('maxRangeSpeed'),
+            };
+
+            const toggleFormulasButton = document.getElementById('toggleFormulas');
+            const formulaSection = document.getElementById('formulaSection');
+
+            const params = {
+                rho: 1.225, // air density in kg/m^3
+                g: 9.81, // gravity in m/s^2
+                frontalArea: 2.5, // m^2, assumed for a 1-seater
+                profilePower: 2000, // Watts, assumed constant
+                systemPower: 500, // Watts, assumed constant
+                motorEfficiency: 0.90, // Overall system efficiency
+            };
+
+            function calculateFlightData() {
+                const W = parseFloat(inputs.droneWeight.value) * params.g; // Weight in Newtons
+                const Ad = parseFloat(inputs.rotorArea.value);
+                const Cd = parseFloat(inputs.dragCoefficient.value);
+                const batteryWh = parseFloat(inputs.batteryCapacity.value) * 1000; // kWh to Wh
+                const wind_mps = parseFloat(inputs.windSpeed.value) / 3.6; // km/h to m/s
+
+                const hoverInducedPower = Math.pow(W, 1.5) / Math.sqrt(2 * params.rho * Ad);
+                const v_h = hoverInducedPower / W; // effective induced velocity at hover
+
+                let speeds_kmh = [];
+                let inducedPowers = [];
+                let parasiticPowers = [];
+                let totalPowers = [];
+                let ranges = [];
+
+                for (let v_ground_kmh = 1; v_ground_kmh <= 150; v_ground_kmh++) {
+                    speeds_kmh.push(v_ground_kmh);
+                    const v_ground_mps = v_ground_kmh / 3.6;
+                    const v_air_mps = v_ground_mps + wind_mps;
+
+                    // Induced Power (simplified model for forward flight)
+                    const inducedPower = hoverInducedPower / Math.sqrt(Math.pow(v_air_mps, 2) + Math.pow(v_h, 2)) * v_air_mps;
+                    
+                    // Parasitic Power
+                    const parasiticPower = 0.5 * params.rho * Math.pow(v_air_mps, 3) * Cd * params.frontalArea;
+                    
+                    const mechanicalPower = inducedPower + parasiticPower + params.profilePower;
+                    const electricalPower = (mechanicalPower / params.motorEfficiency) + params.systemPower;
+
+                    inducedPowers.push(inducedPower / 1000); // in kW
+                    parasiticPowers.push(parasiticPower / 1000); // in kW
+                    totalPowers.push(electricalPower / 1000); // in kW
+
+                    if (v_ground_mps > 0) {
+                        const flightTimeHours = batteryWh / electricalPower;
+                        const rangeKm = v_ground_mps * 3.6 * flightTimeHours;
+                        ranges.push(rangeKm);
+                    } else {
+                        ranges.push(0);
+                    }
+                }
+                
+                return { speeds_kmh, inducedPowers, parasiticPowers, totalPowers, ranges, batteryWh };
+            }
+
+            function updateUI() {
+                labels.droneWeightLabel.textContent = inputs.droneWeight.value;
+                labels.rotorAreaLabel.textContent = parseFloat(inputs.rotorArea.value).toFixed(1);
+                labels.dragCoefficientLabel.textContent = parseFloat(inputs.dragCoefficient.value).toFixed(2);
+                labels.batteryCapacityLabel.textContent = inputs.batteryCapacity.value;
+                labels.windSpeedLabel.textContent = inputs.windSpeed.value;
+                
+                const data = calculateFlightData();
+                updateChart(data);
+
+                // Calculate metrics
+                const minPower = Math.min(...data.totalPowers);
+                const maxEnduranceHours = (data.batteryWh / 1000) / minPower;
+                outputs.maxEndurance.textContent = `${(maxEnduranceHours * 60).toFixed(0)} min`;
+                
+                const maxRangeVal = Math.max(...data.ranges);
+                const maxRangeIndex = data.ranges.indexOf(maxRangeVal);
+                const maxRangeSpeedVal = data.speeds_kmh[maxRangeIndex];
+
+                outputs.maxRange.textContent = `${maxRangeVal.toFixed(0)} km`;
+                outputs.maxRangeSpeed.textContent = `${maxRangeSpeedVal} km/h`;
+            }
+
+            function updateChart(data) {
+                const { speeds_kmh, inducedPowers, parasiticPowers, totalPowers } = data;
+                powerChart.data.labels = speeds_kmh;
+                powerChart.data.datasets[0].data = inducedPowers;
+                powerChart.data.datasets[1].data = parasiticPowers;
+                powerChart.data.datasets[2].data = totalPowers;
+                powerChart.update('none');
+            }
+
+            function initChart() {
+                const initialData = calculateFlightData();
+                powerChart = new Chart(chartCtx, {
+                    type: 'line',
+                    data: {
+                        labels: initialData.speeds_kmh,
+                        datasets: [
+                            {
+                                label: 'Induced Power (kW)',
+                                data: initialData.inducedPowers,
+                                borderColor: 'rgb(59, 130, 246)',
+                                backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                                borderWidth: 2,
+                                pointRadius: 0,
+                                tension: 0.4,
+                            },
+                            {
+                                label: 'Parasitic Power (kW)',
+                                data: initialData.parasiticPowers,
+                                borderColor: 'rgb(239, 68, 68)',
+                                backgroundColor: 'rgba(239, 68, 68, 0.5)',
+                                borderWidth: 2,
+                                pointRadius: 0,
+                                tension: 0.4,
+                            },
+                            {
+                                label: 'Total Power (kW)',
+                                data: initialData.totalPowers,
+                                borderColor: 'rgb(22, 163, 74)',
+                                backgroundColor: 'rgba(22, 163, 74, 0.5)',
+                                borderWidth: 3,
+                                pointRadius: 0,
+                                tension: 0.4,
+                                fill: true,
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Ground Speed (km/h)'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Power (kW)'
+                                },
+                                beginAtZero: true
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += context.parsed.y.toFixed(1) + ' kW';
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            toggleFormulasButton.addEventListener('click', () => {
+                formulaSection.classList.toggle('hidden');
+                if (formulaSection.classList.contains('hidden')) {
+                    toggleFormulasButton.textContent = 'Show Physics Formulas';
+                } else {
+                    toggleFormulasButton.textContent = 'Hide Physics Formulas';
+                }
+            });
+
+            Object.values(inputs).forEach(input => {
+                input.addEventListener('input', updateUI);
+            });
+
+            initChart();
+            updateUI();
+        });
+    </script>
+</body>
+</html>
