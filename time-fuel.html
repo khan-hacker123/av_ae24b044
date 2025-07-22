@@ -3,21 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Drone Range Analyzer</title>
+    <title>Interactive Drone & PAV Performance Analyzer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Chosen Palette: Warm Neutrals (Slate, Zinc, Amber) -->
-    <!-- Application Structure Plan: The SPA is designed in three logical sections to guide the user from concept to application. 
+    <!-- Application Structure Plan: The SPA is designed in four logical sections to guide the user from concept to application. 
         1. 'The Basics': Introduces the four core power components in a simple, visual card layout. This establishes the fundamental knowledge needed.
-        2. 'Interactive Calculator': The heart of the app. It pairs control sliders with a dynamic chart and key metric readouts. This structure allows users to immediately see the cause-and-effect relationship between drone parameters and flight performance, making the complex physics tangible and intuitive. A new collapsible section for the underlying physics formulas is added here to provide deeper insight without cluttering the main view.
-        3. 'Tech Breakthroughs': Connects the abstract physics to real-world innovation. This section provides context on how future technology can alter the parameters in the calculator, closing the loop between theory and reality.
-        This flow—Learn, Experiment, Explore—is chosen for maximum user engagement and understanding, transforming a static report into a hands-on learning tool. -->
+        2. 'Interactive Calculator': The heart of the app. It pairs control sliders with a dynamic chart and key metric readouts. This structure allows users to immediately see the cause-and-effect relationship between drone parameters and flight performance, making the complex physics tangible and intuitive. A collapsible section for simplified physics formulas is included here.
+        3. 'Technical Deep Dive': This new section merges the detailed analysis from the source PDF. It provides a comprehensive breakdown of the mathematical models, the physics behind each power component, and a case study for a large PAV, all presented without complex notations. This serves as the core reference material.
+        4. 'Tech Breakthroughs': Connects the abstract physics to real-world innovation. This section provides context on how future technology can alter the parameters in the calculator, closing the loop between theory and reality.
+        This flow—Learn, Experiment, Analyze, Explore—is chosen for maximum user engagement and understanding, transforming a static report into a hands-on learning tool. -->
     <!-- Visualization & Content Choices:
-        - Report Info: The relationship between drone speed and the various components of power consumption (Induced, Parasitic, Total).
-        - Goal: To allow users to visualize the trade-offs in power consumption and identify the optimal speeds for endurance and range.
-        - Viz/Presentation Method: A multi-line chart rendered on an HTML5 Canvas. Separate lines clearly distinguish between power types. Key metrics (Max Range, etc.) are displayed as large, clear text.
-        - Interaction: Users manipulate sliders for drone parameters (e.g., weight, battery). The chart and metric displays update in real-time in response. Tooltips on the chart provide specific data points on hover. Points of interest (min power, max range factor) are highlighted.
+        - Report Info: The relationship between drone speed and the various components of power consumption (Induced, Parasitic, Profile, Total). The concepts of Vme and Vmr.
+        - Goal: To allow users to visualize the trade-offs in power consumption and identify the optimal speeds for endurance and range, and to provide detailed textual explanations.
+        - Viz/Presentation Method: A multi-line chart rendered on an HTML5 Canvas for the interactive part. Detailed textual explanations are organized in a clean, readable, single-column format for the deep dive.
+        - Interaction: Users manipulate sliders for drone parameters. The chart and metric displays update in real-time. A button reveals simplified formulas.
         - Justification: This interactive visualization is far more effective than a static graph. It fosters active exploration and provides immediate feedback, allowing users to build an intuitive grasp of complex aerodynamic principles without needing to understand the underlying math.
         - Library/Method: Chart.js for its robust, responsive, and easy-to-implement canvas-based charting.
     -->
@@ -27,6 +28,7 @@
             font-family: 'Inter', sans-serif;
             background-color: #f8fafc; /* slate-50 */
             color: #1e293b; /* slate-800 */
+            scroll-behavior: smooth;
         }
         .chart-container {
             position: relative;
@@ -75,6 +77,31 @@
             margin-bottom: 0.5rem;
             font-family: monospace;
             overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        th, td {
+            border: 1px solid #cbd5e1; /* slate-300 */
+            padding: 0.75rem;
+            text-align: left;
+        }
+        th {
+            background-color: #f1f5f9; /* slate-100 */
+            font-weight: 600;
+        }
+        .deep-dive-section {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
     </style>
 </head>
@@ -85,11 +112,12 @@
             <div class="flex items-center justify-between h-16">
                 <div class="flex items-center">
                     <span class="text-2xl font-bold text-amber-600">🚁</span>
-                    <h1 class="text-xl font-bold ml-3">Drone Performance Analyzer</h1>
+                    <h1 class="text-xl font-bold ml-3">PAV Performance Analyzer</h1>
                 </div>
                 <div class="hidden md:flex items-center space-x-8">
                     <a href="#concepts" class="text-gray-500 hover:text-gray-900 font-medium">Concepts</a>
                     <a href="#calculator" class="text-gray-500 hover:text-gray-900 font-medium">Calculator</a>
+                    <a href="#deep-dive" class="text-gray-500 hover:text-gray-900 font-medium">Technical Deep Dive</a>
                     <a href="#tech" class="text-gray-500 hover:text-gray-900 font-medium">Breakthroughs</a>
                 </div>
             </div>
@@ -101,7 +129,7 @@
         <section id="concepts" class="py-16 md:py-24">
             <div class="text-center">
                 <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">The Basics of Flight Power</h2>
-                <p class="mt-4 max-w-2xl mx-auto text-lg text-gray-600">A drone's battery life isn't just about its size. It's about a constant battle against four different forces that consume energy. Understanding these is the first step to achieving long-range flight.</p>
+                <p class="mt-4 max-w-2xl mx-auto text-lg text-gray-600">A drone's battery life isn't just about its size. It's about a constant battle against different forces that consume energy. Understanding these is the first step to achieving long-range flight.</p>
             </div>
             <div class="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
                 <div class="bg-white rounded-xl shadow-md p-6">
@@ -112,7 +140,7 @@
                 <div class="bg-white rounded-xl shadow-md p-6">
                     <div class="text-4xl">🌬️</div>
                     <h3 class="mt-4 text-xl font-bold">Parasitic Power</h3>
-                    <p class="mt-2 text-gray-600">The energy needed to overcome air resistance (drag). This is tiny at low speeds but grows exponentially, becoming the biggest enemy of range at high speeds.</p>
+                    <p class="mt-2 text-gray-600">The energy needed to overcome air resistance (drag) on the vehicle's body. This is tiny at low speeds but grows exponentially, becoming the biggest enemy of range at high speeds.</p>
                 </div>
                 <div class="bg-white rounded-xl shadow-md p-6">
                     <div class="text-4xl">🔄</div>
@@ -139,30 +167,30 @@
             </div>
 
             <div id="formulaSection" class="formula-box hidden mt-8">
-                <h3 class="text-xl font-bold mb-4">Underlying Physics Formulas</h3>
+                <h3 class="text-xl font-bold mb-4">Underlying Physics Formulas (Simplified)</h3>
                 <p class="mb-2">The total power required by the drone is the sum of its components:</p>
-                <code>P<sub>total</sub>(v) = P<sub>induced</sub>(v) + P<sub>parasitic</sub>(v) + P<sub>profile</sub> + P<sub>system</sub></code>
+                <code>P_total(v) = P_induced(v) + P_parasitic(v) + P_profile + P_system</code>
                 
                 <p class="mt-4 mb-2"><strong>Induced Power (Hover):</strong> Power to produce lift.</p>
-                <code>P<sub>i, hover</sub> = (mg)<sup>3/2</sup> / &radic;(2 &rho; A<sub>d</sub>)</code>
+                <code>P_i_hover = (mass * g)^1.5 / sqrt(2 * rho * A_d)</code>
                 
                 <p class="mt-4 mb-2"><strong>Induced Power (Forward Flight - Simplified):</strong> Decreases with forward speed.</p>
-                <code>P<sub>induced</sub>(v) = P<sub>i, hover</sub> / &radic;(v<sub>air</sub><sup>2</sup> + v<sub>h</sub><sup>2</sup>) &times; v<sub>air</sub></code>
-                <code>where v<sub>h</sub> = P<sub>i, hover</sub> / (mg)</code>
+                <code>P_induced(v) = P_i_hover / sqrt(v_air^2 + v_h^2) * v_air</code>
+                <code>where v_h = P_i_hover / (mass * g)</code>
                 
                 <p class="mt-4 mb-2"><strong>Parasitic Power:</strong> Power to overcome air resistance, increases cubically with speed.</p>
-                <code>P<sub>parasitic</sub>(v) = 0.5 &times; &rho; &times; v<sub>air</sub><sup>3</sup> &times; C<sub>D</sub> &times; A<sub>f</sub></code>
+                <code>P_parasitic(v) = 0.5 * rho * v_air^3 * C_D * A_f</code>
                 
                 <p class="mt-4 mb-2"><strong>Usable Battery Energy:</strong> Total energy available for flight.</p>
-                <code>E<sub>usable</sub> = Battery Capacity (Wh)</code>
+                <code>E_usable = Battery Capacity (Wh)</code>
                 <p class="text-sm text-gray-600">Note: In this calculator, system efficiency and nominal voltage are abstracted into the 'Usable Battery Capacity' slider for simplicity.</p>
 
                 <p class="mt-4 mb-2"><strong>Flight Time (Endurance):</strong></p>
-                <code>t = E<sub>usable</sub> / P<sub>total</sub>(v)</code>
+                <code>t = E_usable / P_total(v)</code>
 
                 <p class="mt-4 mb-2"><strong>Range:</strong></p>
-                <code>Range = v<sub>ground</sub> &times; t</code>
-                <p class="text-sm text-gray-600">Where v<sub>air</sub> = v<sub>ground</sub> + v<sub>wind</sub> (for headwind).</p>
+                <code>Range = v_ground * t</code>
+                <p class="text-sm text-gray-600">Where v_air = v_ground + v_wind (for headwind).</p>
             </div>
 
             <div class="mt-12 grid lg:grid-cols-12 gap-8">
@@ -177,7 +205,7 @@
                         <input type="range" id="rotorArea" min="5" max="20" value="10" step="0.5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
                     </div>
                     <div>
-                        <label for="dragCoefficient" class="font-medium">Drag Coefficient ($C_D$): <span id="dragCoefficientLabel" class="font-bold text-amber-600">0.50</span></label>
+                        <label for="dragCoefficient" class="font-medium">Drag Coefficient (C_D): <span id="dragCoefficientLabel" class="font-bold text-amber-600">0.50</span></label>
                         <input type="range" id="dragCoefficient" min="0.2" max="1.0" value="0.5" step="0.05" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
                     </div>
                     <div>
@@ -191,23 +219,92 @@
                 </div>
                 <div class="lg:col-span-8 bg-white rounded-xl shadow-md p-6">
                      <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-center mb-6">
-                        <div>
-                            <h4 class="text-sm text-gray-500">Max Endurance</h4>
-                            <p id="maxEndurance" class="text-2xl md:text-3xl font-bold text-green-600">-- min</p>
-                        </div>
-                        <div>
-                            <h4 class="text-sm text-gray-500">Max Range</h4>
-                            <p id="maxRange" class="text-2xl md:text-3xl font-bold text-blue-600">-- km</p>
-                        </div>
-                        <div class="col-span-2 md:col-span-1">
-                            <h4 class="text-sm text-gray-500">Speed for Max Range</h4>
-                            <p id="maxRangeSpeed" class="text-2xl md:text-3xl font-bold text-blue-600">-- km/h</p>
-                        </div>
-                    </div>
+                         <div>
+                             <h4 class="text-sm text-gray-500">Max Endurance</h4>
+                             <p id="maxEndurance" class="text-2xl md:text-3xl font-bold text-green-600">-- min</p>
+                         </div>
+                         <div>
+                             <h4 class="text-sm text-gray-500">Max Range</h4>
+                             <p id="maxRange" class="text-2xl md:text-3xl font-bold text-blue-600">-- km</p>
+                         </div>
+                         <div class="col-span-2 md:col-span-1">
+                             <h4 class="text-sm text-gray-500">Speed for Max Range</h4>
+                             <p id="maxRangeSpeed" class="text-2xl md:text-3xl font-bold text-blue-600">-- km/h</p>
+                         </div>
+                     </div>
                     <div class="chart-container">
                         <canvas id="powerCurveChart"></canvas>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <div class="border-t border-gray-200"></div>
+
+        <section id="deep-dive" class="py-16 md:py-24">
+            <div class="deep-dive-section">
+                <h2 class="text-3xl font-bold tracking-tight sm:text-4xl text-center">Technical Deep Dive: Power Consumption Analysis</h2>
+                <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600 text-center">This section provides a detailed breakdown of the mathematical models and physics governing power consumption in rotary-wing aircraft, based on the provided engineering report. This analysis is crucial for optimizing drone design and mission planning.</p>
+                
+                <h3 class="text-2xl font-semibold mt-12">Detailed Mathematical Model and Underlying Physics</h3>
+                <p>The instantaneous power consumption for a rotary-wing UAV in straight-and-level flight at a given speed, V, can be conceptually understood as the sum of its three primary components. The general form of the power consumption model is expressed as:</p>
+                <div class="formula-box"><code>P(V) = (Blade Profile Power) + (Induced Power) + (Parasite Power)</code></div>
+                <p>The provided report details this relationship with a more complex formula using modeling coefficients (c_i), where each term corresponds to one of these power components. We will explore the physical meaning of each.</p>
+
+                <h4 class="text-xl font-semibold mt-8">Breakdown of Power Components</h4>
+                <p>Each component of power consumption is rooted in distinct physical phenomena:</p>
+                <ul class="space-y-6 mt-4">
+                    <li><strong>Parasite Power:</strong> This power is required to overcome parasite drag, which arises from the resistance of the air against all non-lifting components of the drone (fuselage, landing gear, etc.). It is a combination of form drag, skin friction drag, and interference drag. This power component increases dramatically with flight speed, specifically exhibiting a <strong>cubic relationship</strong> to speed. This means that doubling the speed increases parasite power eightfold, making it the dominant power consumer at high speeds.</li>
+                    <li><strong>Induced Power:</strong> This power is consumed to overcome induced drag, an unavoidable consequence of generating lift. As the rotors generate lift by accelerating air downwards, they create a "downwash" that effectively tilts the net aerodynamic force vector backward, creating a drag component. At hover and very low forward speeds, induced power is very high. As forward speed increases, the rotors encounter "fresh," undisturbed air, which generally makes lift generation more efficient, leading to an <strong>inverse relationship</strong> with forward speed.</li>
+                    <li><strong>Blade Profile Power:</strong> This is the energy required to overcome the profile drag of the rotor blades themselves as they rotate through the air, irrespective of the lift they generate. It has a constant baseline power requirement even at zero forward speed (hover) and increases with forward speed, typically proportional to the square of the velocity.</li>
+                </ul>
+
+                <h4 class="text-xl font-semibold mt-8">Modeling Parameters (c_i)</h4>
+                <p>The constants in the power consumption formula are not arbitrary but are derived from fundamental physical properties of the UAV. These modeling parameters depend on:</p>
+                <ul class="list-disc ml-6">
+                    <li><strong>Aircraft Weight:</strong> A heavier drone requires greater thrust, primarily impacting the induced power component.</li>
+                    <li><strong>Air Density:</strong> Lower air density (e.g., at higher altitudes) requires rotors to spin faster to generate the same lift, increasing power consumption.</li>
+                    <li><strong>Rotor Disc Area:</strong> A larger rotor disc area generally improves efficiency in hover by reducing induced power, but can increase profile and parasite drag. This represents a critical design trade-off.</li>
+                </ul>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Component</th>
+                                <th>Physical Basis</th>
+                                <th>Speed Dependency</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Parasite Power</strong></td>
+                                <td>Air resistance on non-lifting parts (fuselage, landing gear)</td>
+                                <td>Increases cubically with speed (V^3)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Induced Power</strong></td>
+                                <td>Energy to generate lift (downwash effect)</td>
+                                <td>Initially high, decreases with speed</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Blade Profile Power</strong></td>
+                                <td>Drag from rotor blades rotating through air</td>
+                                <td>Constant baseline plus increase with square of speed (V^2)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3 class="text-2xl font-semibold mt-12">Optimal Flight Speeds: Maximizing Endurance and Range</h3>
+                <p>The U-shaped power curve reveals specific flight speeds that optimize different mission objectives.</p>
+                <ul class="space-y-4 mt-4">
+                    <li><strong>Maximum-Endurance Speed (V_me):</strong> This is the speed at which the UAV consumes the least amount of power, allowing it to remain airborne for the longest possible duration. Graphically, V_me corresponds to the absolute lowest point on the total power consumption curve.</li>
+                    <li><strong>Maximum-Range Speed (V_mr):</strong> This is the speed that enables the UAV to travel the greatest possible distance for a given amount of energy. It is achieved by minimizing the energy consumed per unit distance. Graphically, V_mr is determined by drawing a tangent line from the origin to the total power consumption curve. This speed is generally higher than V_me.</li>
+                </ul>
+
+                <h3 class="text-2xl font-semibold mt-12">Case Study: Optimizing a Large Quadcopter (1-Seater, 80km Range)</h3>
+                <p>For the specified 1-seater PAV with a 5m width and an 80 km range requirement, the power consumption characteristics will be similar to those of "Large Drones" as described in the source report. The increased size and weight lead to significantly higher absolute power consumption across all flight speeds.</p>
+                <p>Since the primary mission objective is to achieve an 80 km range, the optimal operational speed will be the <strong>maximum-range speed (V_mr)</strong>. Analysis of the report's graphs for large drones indicates that this speed is approximately in the range of <strong>15 to 20 m/s (54 to 72 km/h)</strong>. Operating at this speed ensures the most energy-efficient coverage of the distance, even if it doesn't maximize the total flight time. The vehicle's design and battery system must be optimized to perform efficiently and provide sufficient energy for sustained flight at this target speed.</p>
             </div>
         </section>
 
@@ -220,21 +317,21 @@
             </div>
             <div class="mt-12 grid gap-8 md:grid-cols-2">
                  <div class="bg-white rounded-xl shadow-md p-6">
-                    <h3 class="text-xl font-bold">🔋 Battery Technology</h3>
-                    <p class="mt-2 text-gray-600">The holy grail. Higher energy density (more power for less weight) is the single most critical factor. Advances like solid-state or lithium-sulfur batteries could dramatically increase the 'Battery Capacity' slider, making long ranges feasible.</p>
-                </div>
-                <div class="bg-white rounded-xl shadow-md p-6">
-                    <h3 class="text-xl font-bold">✈️ Aerodynamics & Airframe</h3>
-                    <p class="mt-2 text-gray-600">For long-range flight, a pure multirotor is inefficient. A hybrid VTOL design with wings is key. Wings generate lift far more efficiently in forward flight, drastically reducing induced power. This is reflected in a lower effective 'Drag Coefficient' and better power curves.</p>
-                </div>
+                     <h3 class="text-xl font-bold">🔋 Battery Technology</h3>
+                     <p class="mt-2 text-gray-600">The holy grail. Higher energy density (more power for less weight) is the single most critical factor. Advances like solid-state or lithium-sulfur batteries could dramatically increase the 'Battery Capacity' slider, making long ranges feasible.</p>
+                 </div>
                  <div class="bg-white rounded-xl shadow-md p-6">
-                    <h3 class="text-xl font-bold">⚡ Propulsion & Electronics</h3>
-                    <p class="mt-2 text-gray-600">More efficient motors and electronic speed controllers (ESCs) mean less energy is wasted as heat. Innovations like Gallium Nitride (GaN) components can improve overall system efficiency, meaning more of the battery's power gets to the props.</p>
-                </div>
-                <div class="bg-white rounded-xl shadow-md p-6">
-                    <h3 class="text-xl font-bold">🏗️ Lightweight Materials</h3>
-                    <p class="mt-2 text-gray-600">Every single gram counts. Using advanced carbon fiber composites and alloys reduces the drone's structural weight. This directly lowers the 'Total Weight' slider, which has a massive impact on the induced power needed to stay aloft.</p>
-                </div>
+                     <h3 class="text-xl font-bold">✈️ Aerodynamics & Airframe</h3>
+                     <p class="mt-2 text-gray-600">For long-range flight, a pure multirotor is inefficient. A hybrid VTOL design with wings is key. Wings generate lift far more efficiently in forward flight, drastically reducing induced power. This is reflected in a lower effective 'Drag Coefficient' and better power curves.</p>
+                 </div>
+                 <div class="bg-white rounded-xl shadow-md p-6">
+                     <h3 class="text-xl font-bold">⚡ Propulsion & Electronics</h3>
+                     <p class="mt-2 text-gray-600">More efficient motors and electronic speed controllers (ESCs) mean less energy is wasted as heat. Innovations like Gallium Nitride (GaN) components can improve overall system efficiency, meaning more of the battery's power gets to the props.</p>
+                 </div>
+                 <div class="bg-white rounded-xl shadow-md p-6">
+                     <h3 class="text-xl font-bold">🏗️ Lightweight Materials</h3>
+                     <p class="mt-2 text-gray-600">Every single gram counts. Using advanced carbon fiber composites and alloys reduces the drone's structural weight. This directly lowers the 'Total Weight' slider, which has a massive impact on the induced power needed to stay aloft.</p>
+                 </div>
             </div>
         </section>
 
@@ -242,7 +339,7 @@
 
     <footer class="bg-white border-t mt-16">
         <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-gray-500">
-            <p>&copy; 2025 Interactive Drone Analyzer. Created by Gemini AI.</p>
+            <p>&copy; 2025 Interactive Drone Analyzer. Information adapted from source report for educational purposes.</p>
         </div>
     </footer>
 
@@ -375,7 +472,7 @@
                                 label: 'Induced Power (kW)',
                                 data: initialData.inducedPowers,
                                 borderColor: 'rgb(59, 130, 246)',
-                                backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
                                 borderWidth: 2,
                                 pointRadius: 0,
                                 tension: 0.4,
@@ -384,7 +481,7 @@
                                 label: 'Parasitic Power (kW)',
                                 data: initialData.parasiticPowers,
                                 borderColor: 'rgb(239, 68, 68)',
-                                backgroundColor: 'rgba(239, 68, 68, 0.5)',
+                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
                                 borderWidth: 2,
                                 pointRadius: 0,
                                 tension: 0.4,
@@ -393,7 +490,7 @@
                                 label: 'Total Power (kW)',
                                 data: initialData.totalPowers,
                                 borderColor: 'rgb(22, 163, 74)',
-                                backgroundColor: 'rgba(22, 163, 74, 0.5)',
+                                backgroundColor: 'rgba(22, 163, 74, 0.1)',
                                 borderWidth: 3,
                                 pointRadius: 0,
                                 tension: 0.4,
