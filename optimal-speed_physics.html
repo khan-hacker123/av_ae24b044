@@ -7,17 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: Warm Neutrals with Subtle Accents -->
-    <!-- Application Structure Plan: The application is designed as an interactive educational dashboard. The structure flows from fundamental concepts, detailed physics explanations, interactive simulation, and finally to practical application and nuanced scenarios. It starts with an an introduction to the drone and the core physics problem. A "Physics Breakdown" section now provides detailed, hidden explanations for key terms, which can be expanded. The centerpiece remains the interactive "Performance Simulator" where users can manipulate speed and flight conditions (now with more options) to see real-time effects on a central power-vs-speed chart and key performance indicators. This hands-on approach is chosen for usability, allowing users to build intuition by exploring cause and effect directly. Following the simulator, a "Flight Scenarios Analysis" section provides detailed, contextual explanations for the simulated conditions, reinforcing the learning. The structure concludes with a clear summary of optimal speeds, ensuring the main takeaways are explicit. This top-down, interactive design is more engaging and effective for understanding complex relationships than a static report. -->
-    <!-- Visualization & Content Choices:
-        - Report Info: Relationship between speed, power types (induced, parasitic, profile, system), and overall performance (range, time). Extended to include detailed physics concepts (drag types, optimal speed derivations) and additional scenarios (turbulence, ascent/descent, altitude).
-        - Goal: Allow users to understand how these factors interact to determine optimal flight speeds, grasp the underlying physics, and comprehend real-world flight complexities.
-        - Viz/Presentation Method: A multi-line Chart.js chart is used to show the constituent power curves (induced, parasitic) and the resulting total power curve. This visually explains the core trade-off. Dynamic text panels display key metrics (range, flight time), making the consequences of user choices immediately clear. New collapsible text sections provide in-depth physics explanations for specific terms.
-        - Interaction: A primary slider controls the drone's speed. Buttons for different flight scenarios (wind, turns, turbulence, altitude, vertical movement) modify the parameters of the physics model, updating both the chart and the text readouts. This allows for direct comparison and exploration. Clickable "Learn More" buttons toggle detailed physics explanations, allowing users to dive deeper without cluttering the main view.
-        - Justification: This interactive model is superior to static charts because it fosters active learning. Users can test hypotheses ("what if I fly faster in a headwind?") and see the results instantly, building a deeper understanding of the underlying physics. Integrating the detailed research within the application, rather than as separate text, keeps all relevant information in one place and empowers users to control the depth of information they consume.
-        - Library/Method: Chart.js for the main graph due to its simplicity, responsiveness, and canvas-based rendering. Tailwind CSS for layout and styling. All interactions are handled with vanilla JavaScript.
-    -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -62,7 +51,7 @@
             transition: max-height 0.3s ease-out;
         }
         .collapsible-content.expanded {
-            max-height: 1000px; /* Increased to accommodate more text */
+            max-height: 1000px;
             transition: max-height 0.5s ease-in;
         }
     </style>
@@ -78,7 +67,7 @@
 
         <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-8">
 
-            <!-- Introduction Section -->
+            
             <section id="intro">
                 <h2 class="text-2xl font-bold text-slate-900 mb-4">The Challenge of Electric Flight Efficiency</h2>
                 <div class="space-y-4 text-slate-700">
@@ -89,7 +78,6 @@
 
             <hr class="my-8 border-slate-200">
 
-            <!-- Physics Breakdown Section -->
             <section id="physics-breakdown">
                 <h2 class="text-2xl font-bold text-slate-900 mb-4">The Physics of Quadcopter Power Consumption</h2>
                 <div class="space-y-4 text-slate-700">
@@ -139,14 +127,12 @@
 
             <hr class="my-8 border-slate-200">
 
-            <!-- Performance Simulator Section -->
             <section id="simulator">
                 <h2 class="text-2xl font-bold text-slate-900 mb-2 text-center">Interactive Performance Simulator</h2>
                 <p class="text-center text-slate-600 mb-6">Adjust the speed and flight conditions to see how they affect power, time, and range.</p>
                 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     
-                    <!-- Controls and Readouts -->
                     <div class="lg:col-span-1 bg-slate-50 rounded-lg p-6">
                         <div class="mb-6">
                             <label for="speed-slider" class="block text-sm font-medium text-slate-700 mb-2">Cruising Speed: <span id="speed-value" class="font-bold text-indigo-600 text-lg">75 km/h</span></label>
@@ -183,14 +169,11 @@
                         </div>
                     </div>
 
-                    <!-- Chart and Detailed Physics Display -->
                     <div class="lg:col-span-2 flex flex-col space-y-6">
                         <div class="chart-container">
                             <canvas id="power-chart"></canvas>
                         </div>
-                        <!-- New div for detailed physics, initially hidden -->
                         <div id="detailed-physics-display" class="bg-slate-50 rounded-lg p-6 hidden">
-                            <!-- Content will be dynamically loaded here -->
                         </div>
                     </div>
                 </div>
@@ -198,17 +181,14 @@
             
             <hr class="my-8 border-slate-200">
 
-            <!-- Flight Scenarios Analysis Section -->
             <section id="analysis">
                 <h2 class="text-2xl font-bold text-slate-900 mb-4">Flight Scenarios Analysis & Physics</h2>
                 <div id="analysis-text" class="space-y-4 text-slate-700 bg-slate-50 p-6 rounded-lg">
-                    <!-- Dynamic content will be loaded here -->
                 </div>
             </section>
 
             <hr class="my-8 border-slate-200">
 
-            <!-- Optimal Speeds Summary Section -->
             <section id="optimal-speeds">
                 <h2 class="text-2xl font-bold text-slate-900 mb-4">Optimal Speed Summary (in Calm Air)</h2>
                 <div class="grid md:grid-cols-2 gap-6">
@@ -269,7 +249,6 @@
 
             <hr class="my-8 border-slate-200">
 
-            <!-- Avionics and Flight Control for Optimization Section -->
             <section id="avionics-control">
                 <h2 class="text-2xl font-bold text-slate-900 mb-4">Avionics and Flight Control for Optimization</h2>
                 <div class="space-y-4 text-slate-700">
@@ -287,7 +266,6 @@
 
             <hr class="my-8 border-slate-200">
 
-            <!-- Pseudo-code for Optimization Strategies -->
             <section id="pseudo-code">
                 <h2 class="text-2xl font-bold text-slate-900 mb-4">Pseudo-code for Optimization Strategies</h2>
                 <div class="space-y-4 text-slate-700">
@@ -378,7 +356,6 @@ END FUNCTION
 
             <hr class="my-8 border-slate-200">
 
-            <!-- References Section -->
             <section id="references">
                 <h2 class="text-2xl font-bold text-slate-900 mb-4">References</h2>
                 <div class="space-y-2 text-slate-700 text-sm">
@@ -407,11 +384,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const analysisText = document.getElementById('analysis-text');
     const enduranceSpeedEl = document.getElementById('endurance-speed');
     const rangeSpeedEl = document.getElementById('range-speed');
-    const detailedPhysicsDisplay = document.getElementById('detailed-physics-display'); // Get the new div
+    const detailedPhysicsDisplay = document.getElementById('detailed-physics-display');
 
     let currentScenario = 'calm';
     
-    // Function to toggle collapsible content (for the top Physics Breakdown section)
     window.toggleCollapsible = (id) => {
         const element = document.getElementById(id);
         const icon = element.previousElementSibling.querySelector('.toggle-icon');
@@ -583,14 +559,14 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const droneParams = {
-        weight: 600, // kg (including pilot)
-        rotorArea: 19.6, // m^2 (e.g., 4 rotors, 2.5m diameter each, A = pi*r^2 * 4) -> (pi*(1.25^2) * 4) ~ 19.6
-        airDensity: 1.225, // kg/m^3 (sea level)
-        dragCoefficient: 0.8, // Adjusted for a large eVTOL, less streamlined than fixed-wing
-        frontalArea: 4.5, // m^2 (5m wide, approx 0.9m high = 4.5)
-        profilePowerConstant: 10000, // W - Empirical constant for profile power
-        systemPower: 500, // W - Avionics, lights, etc.
-        batteryEnergyKWh: 0 // Will be calculated based on 80km target range
+        weight: 600,
+        rotorArea: 19.6
+        airDensity: 1.225,
+        dragCoefficient: 0.8,
+        frontalArea: 4.5,
+        profilePowerConstant: 10000,
+        systemPower: 500,
+        batteryEnergyKWh: 0
     };
     
     let chart;
@@ -599,34 +575,27 @@ document.addEventListener('DOMContentLoaded', () => {
     function calculatePower(v_ms, scenarioParams) {
         const g = 9.81;
         
-        // Adjust for load factor (e.g., turns)
         const T = droneParams.weight * g * (scenarioParams.loadFactor || 1); 
 
-        // Airspeed relative to air mass
         let v_air_ms = v_ms + (scenarioParams.windSpeed_ms || 0);
-        v_air_ms = Math.max(0.1, v_air_ms); // Ensure positive for calculations, avoid division by zero
-
+        v_air_ms = Math.max(0.1, v_air_ms);
+        
         const v_induced_hover = Math.sqrt(T / (2 * (droneParams.airDensity * (scenarioParams.airDensityFactor || 1)) * droneParams.rotorArea));
-        let inducedVelocity = v_induced_hover; // At hover
+        let inducedVelocity = v_induced_hover;
         if (v_air_ms > 0) {
-            // Approximation for forward flight induced velocity (momentum theory)
             inducedVelocity = (T / (2 * (droneParams.airDensity * (scenarioParams.airDensityFactor || 1)) * droneParams.rotorArea * v_air_ms)) * (v_air_ms / (Math.sqrt(Math.pow(v_air_ms, 2) + Math.pow(v_induced_hover, 2))));
-            inducedVelocity = Math.min(v_induced_hover, inducedVelocity); // Cap at hover induced velocity for very low speeds
-            if (inducedVelocity < 0.1) inducedVelocity = 0.1; // Prevent near zero
+            inducedVelocity = Math.min(v_induced_hover, inducedVelocity);
+            if (inducedVelocity < 0.1) inducedVelocity = 0.1;
         }
         let inducedPower = T * inducedVelocity;
 
-        // Parasitic Power: P_parasitic = 0.5 * rho * Cd * A_frontal * V_airspeed^3
         const parasiticPower = 0.5 * (droneParams.airDensity * (scenarioParams.airDensityFactor || 1)) * droneParams.dragCoefficient * droneParams.frontalArea * Math.pow(v_air_ms, 3);
         
-        // Profile Power: Assumed constant for simplicity in this model
         const profilePower = droneParams.profilePowerConstant * (scenarioParams.profilePowerFactor || 1);
 
-        // System Power: Assumed constant
         const systemPower = droneParams.systemPower; 
 
-        // Vertical Movement Power (additional component)
-        const verticalPower = (scenarioParams.verticalSpeed_ms || 0) * T; // P = F * V
+        const verticalPower = (scenarioParams.verticalSpeed_ms || 0) * T;
 
         const totalPower = inducedPower + parasiticPower + profilePower + systemPower + verticalPower;
         
@@ -642,13 +611,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function getScenarioParams(scenario) {
         let params = { windSpeed_ms: 0, loadFactor: 1, airDensityFactor: 1, profilePowerFactor: 1, verticalSpeed_ms: 0 };
         switch (scenario) {
-            case 'headwind': params.windSpeed_ms = 20 * 1000 / 3600; break; // 20 km/h headwind
-            case 'tailwind': params.windSpeed_ms = -20 * 1000 / 3600; break; // 20 km/h tailwind
-            case 'turn': params.loadFactor = 1.2; break; // Simulates 20% increased thrust for a turn (approx. 40-degree bank)
-            case 'turbulence': params.profilePowerFactor = 1.3; params.loadFactor = 1.1; break; // 30% more profile power, 10% more thrust for constant adjustments
-            case 'altitude': params.airDensityFactor = 0.9; break; // Approx air density at 2000m (around 80% of sea level, simplified to 0.9 for effect)
-            case 'ascent': params.verticalSpeed_ms = 2; break; // 2 m/s ascent rate
-            case 'descent': params.verticalSpeed_ms = -2; break; // 2 m/s descent rate (reduces power)
+            case 'headwind': params.windSpeed_ms = 20 * 1000 / 3600; break;
+            case 'tailwind': params.windSpeed_ms = -20 * 1000 / 3600; break;
+            case 'turn': params.loadFactor = 1.2; break;
+            case 'turbulence': params.profilePowerFactor = 1.3; params.loadFactor = 1.1; break;
+            case 'altitude': params.airDensityFactor = 0.9; break;
+            case 'ascent': params.verticalSpeed_ms = 2; break;
+            case 'descent': params.verticalSpeed_ms = -2; break;
             case 'calm':
             default: break;
         }
@@ -671,7 +640,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const powerPerV = power / v_ms;
-            // Exclude very low speeds as P/V becomes unstable/unrepresentative
             if (v_kmh > 10 && powerPerV < minPowerPerV) { 
                 minPowerPerV = powerPerV;
                 rangeSpeed = v_kmh;
@@ -713,7 +681,6 @@ document.addEventListener('DOMContentLoaded', () => {
         chart.data.datasets[1].data = inducedPowerData;
         chart.data.datasets[2].data = parasiticPowerData;
         chart.data.datasets[3].data = profileSystemPowerData;
-        // Clear the active point data when the scenario changes, so it doesn't linger from the previous scenario
         chart.data.datasets[4].data = []; 
         chart.update('none');
         updateReadouts(); // Call updateReadouts to set the active point for the current slider position
@@ -732,7 +699,6 @@ document.addEventListener('DOMContentLoaded', () => {
              timeReadout.textContent = `N/A min`;
              rangeReadout.textContent = `N/A km`;
              updateChartAnnotation(v_kmh);
-             // Clear the active point if data is N/A
              chart.data.datasets[4].data = []; // Assuming index 4 for new dataset
              chart.update('none');
              return;
@@ -745,7 +711,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const flightTime_min = flightTime_hr * 60;
         timeReadout.textContent = `${flightTime_min.toFixed(0)} min`;
         
-        // Calculate ground range, considering wind affecting ground speed
         let actual_ground_speed_kmh = v_kmh;
         if (currentScenario === 'headwind') {
             actual_ground_speed_kmh = v_kmh - (getScenarioParams('headwind').windSpeed_ms * 3600 / 1000);
@@ -756,7 +721,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const range_km = actual_ground_speed_kmh * flightTime_hr;
         rangeReadout.textContent = `${Math.max(0, range_km).toFixed(0)} km`; // Ensure range is not negative
 
-        // Update the active point dataset
+        
         chart.data.datasets[4].data = [{x: v_kmh, y: power_kW}]; // Set the single point
         
         updateChartAnnotation(v_kmh); // This updates the vertical line
@@ -766,13 +731,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateChartAnnotation(speed) {
         chart.options.plugins.annotation.annotations.line1.xMin = speed;
         chart.options.plugins.annotation.annotations.line1.xMax = speed;
-        // chart.update('none'); // Removed as updateReadouts calls chart.update('none')
     }
 
     function updateAnalysisContent() {
         const content = analysisContent[currentScenario];
         
-        // Update the summary analysis text section (below the simulator)
         analysisText.innerHTML = `
             <h3 class="text-xl font-semibold text-slate-800 mb-2">${content.title}</h3>
             <p>${content.text}</p>
@@ -781,7 +744,6 @@ document.addEventListener('DOMContentLoaded', () => {
             </button>
         `;
 
-        // Populate the detailed physics display area (next to the chart)
         detailedPhysicsDisplay.innerHTML = `
             <h3 class="text-xl font-semibold text-slate-800 mb-2">Detailed Physics for: ${content.title}</h3>
             ${content.detailedPhysics}
@@ -790,24 +752,22 @@ document.addEventListener('DOMContentLoaded', () => {
             </button>
         `;
 
-        // Add event listeners for the new buttons
         const showBtn = document.getElementById('show-detailed-physics-btn');
         const hideBtn = document.getElementById('hide-detailed-physics-btn');
 
         if (showBtn) {
             showBtn.onclick = () => {
                 detailedPhysicsDisplay.classList.remove('hidden');
-                showBtn.classList.add('hidden'); // Hide the show button after click
+                showBtn.classList.add('hidden');
             };
         }
         if (hideBtn) {
             hideBtn.onclick = () => {
                 detailedPhysicsDisplay.classList.add('hidden');
-                showBtn.classList.remove('hidden'); // Show the show button again
+                showBtn.classList.remove('hidden');
             };
         }
         
-        // Ensure detailed physics is hidden initially when a new scenario is selected
         detailedPhysicsDisplay.classList.add('hidden');
     }
 
@@ -858,7 +818,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         tension: 0.4,
                         pointRadius: 0,
                     },
-                    { // New dataset for the active point
+                    { 
                         label: 'Current Speed Point',
                         data: [],
                         borderColor: '#4f46e5',
@@ -972,7 +932,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Initial setup
     setBatteryCapacity();
     initChart();
     updateChart();
