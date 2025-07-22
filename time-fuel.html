@@ -7,27 +7,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: Warm Neutrals (Slate, Zinc, Amber) -->
-    <!-- Application Structure Plan: The SPA is designed in four logical sections to guide the user from concept to application. 
-        1. 'The Basics': Introduces the four core power components in a simple, visual card layout. This establishes the fundamental knowledge needed.
-        2. 'Interactive Calculator': The heart of the app. It pairs control sliders with a dynamic chart and key metric readouts. This structure allows users to immediately see the cause-and-effect relationship between drone parameters and flight performance, making the complex physics tangible and intuitive. A collapsible section for simplified physics formulas is included here.
-        3. 'Technical Deep Dive': This new section merges the detailed analysis from the source PDF. It provides a comprehensive breakdown of the mathematical models, the physics behind each power component, and a case study for a large PAV, all presented without complex notations. This serves as the core reference material.
-        4. 'Tech Breakthroughs': Connects the abstract physics to real-world innovation. This section provides context on how future technology can alter the parameters in the calculator, closing the loop between theory and reality.
-        This flow—Learn, Experiment, Analyze, Explore—is chosen for maximum user engagement and understanding, transforming a static report into a hands-on learning tool. -->
-    <!-- Visualization & Content Choices:
-        - Report Info: The relationship between drone speed and the various components of power consumption (Induced, Parasitic, Profile, Total). The concepts of Vme and Vmr.
-        - Goal: To allow users to visualize the trade-offs in power consumption and identify the optimal speeds for endurance and range, and to provide detailed textual explanations.
-        - Viz/Presentation Method: A multi-line chart rendered on an HTML5 Canvas for the interactive part. Detailed textual explanations are organized in a clean, readable, single-column format for the deep dive.
-        - Interaction: Users manipulate sliders for drone parameters. The chart and metric displays update in real-time. A button reveals simplified formulas.
-        - Justification: This interactive visualization is far more effective than a static graph. It fosters active exploration and provides immediate feedback, allowing users to build an intuitive grasp of complex aerodynamic principles without needing to understand the underlying math.
-        - Library/Method: Chart.js for its robust, responsive, and easy-to-implement canvas-based charting.
-    -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f8fafc; /* slate-50 */
-            color: #1e293b; /* slate-800 */
+            background-color: #f8fafc;
+            color: #1e293b;
             scroll-behavior: smooth;
         }
         .chart-container {
@@ -49,20 +34,20 @@
             appearance: none;
             width: 20px;
             height: 20px;
-            background: #f59e0b; /* amber-500 */
+            background: #f59e0b;
             cursor: pointer;
             border-radius: 50%;
         }
         input[type="range"]::-moz-range-thumb {
             width: 20px;
             height: 20px;
-            background: #f59e0b; /* amber-500 */
+            background: #f59e0b;
             cursor: pointer;
             border-radius: 50%;
         }
         .formula-box {
-            background-color: #f1f5f9; /* slate-100 */
-            border-left: 4px solid #f59e0b; /* amber-500 */
+            background-color: #f1f5f9;
+            border-left: 4px solid #f59e0b;
             padding: 1rem;
             margin-top: 1.5rem;
             border-radius: 0.5rem;
@@ -71,7 +56,7 @@
         }
         .formula-box code {
             display: block;
-            background-color: #e2e8f0; /* slate-200 */
+            background-color: #e2e8f0;
             padding: 0.5rem;
             border-radius: 0.25rem;
             margin-bottom: 0.5rem;
@@ -89,12 +74,12 @@
             margin-bottom: 1.5rem;
         }
         th, td {
-            border: 1px solid #cbd5e1; /* slate-300 */
+            border: 1px solid #cbd5e1
             padding: 0.75rem;
             text-align: left;
         }
         th {
-            background-color: #f1f5f9; /* slate-100 */
+            background-color: #f1f5f9;
             font-weight: 600;
         }
         .deep-dive-section {
