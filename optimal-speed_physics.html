@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Chosen Palette: Slate & Cyan Harmony -->
     <!-- Application Structure Plan: A single-page, vertically scrolling narrative. It starts with the core concept (the U-shaped power curve), lets the user play with an interactive simulator to understand the dynamics, explains the key takeaways (optimal speeds for range/endurance), describes a typical flight journey, and finally delves into the "how" (avionics and control logic). This guided-learning structure is more intuitive for a complex topic than a dashboard, as it builds knowledge progressively. -->
-    <!-- Visualization & Content Choices: The central element is an interactive Chart.js line chart showing power vs. speed. This visualization is directly manipulated by a flight simulator (slider/buttons), providing immediate feedback. Key concepts like V_mp and V_mr are visually marked on the chart. Complex formulas and code are hidden by default in expandable toggles to avoid overwhelming users. A new section details a flight journey, integrating concepts of power consumption, wind effects, and maneuvers within a narrative. This approach combines high-level interactive learning with deep-dive information for those interested, all without using SVG or Mermaid. -->
+    <!-- Visualization & Content Choices: The central element is an interactive Chart.js line chart showing power vs. speed. This visualization is directly manipulated by a flight simulator (slider/buttons), providing immediate feedback. Key concepts like V_mp and V_mr are visually marked on the chart. Complex formulas and code are hidden by default in expandable toggles to avoid overwhelming users. A new section details a flight journey with 8 interactive situations, integrating concepts of power consumption, wind effects, and maneuvers within a narrative, with detailed explanations and assumptions for each. This approach combines high-level interactive learning with deep-dive information for those interested, all without using SVG or Mermaid. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -39,6 +39,25 @@
         .condition-btn:hover:not(.active) {
             background-color: #e2e8f0; /* slate-200 */
             color: #1e293b; /* slate-900 */
+        }
+        .journey-btn {
+            background-color: #f1f5f9;
+            color: #475569;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            text-align: center;
+            transition: all 0.2s ease-in-out;
+            border: 1px solid #e2e8f0;
+        }
+        .journey-btn.active {
+            background-color: #0891b2;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(8, 145, 178, 0.3), 0 2px 4px -2px rgba(8, 145, 178, 0.3);
+        }
+        .journey-btn:hover:not(.active) {
+            background-color: #e2e8f0;
+            color: #1e293b;
         }
     </style>
 </head>
@@ -187,42 +206,30 @@
         <section id="journey" class="mb-16 scroll-mt-20">
             <h2 class="section-title">A Typical eVTOL Flight Journey</h2>
             <p class="section-intro">
-                An eVTOL mission is a dynamic sequence of phases, each with unique power demands and considerations. Understanding this journey highlights how real-time adjustments and environmental factors impact overall efficiency and battery consumption.
+                An eVTOL mission is a dynamic sequence of phases, each with unique power demands and considerations. Select a phase to understand its details, assumptions, and impact on battery consumption.
             </p>
             <div class="card space-y-6">
-                <div>
-                    <h3 class="text-xl font-bold mb-2">1. Takeoff & Initial Ascent</h3>
-                    <p class="text-slate-600">
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mb-4">
+                    <button class="journey-btn active" data-phase="takeoff">Takeoff & Ascent</button>
+                    <button class="journey-btn" data-phase="cruise_calm">Cruise (Calm Air)</button>
+                    <button class="journey-btn" data-phase="cruise_headwind">Cruise (Headwind)</button>
+                    <button class="journey-btn" data-phase="cruise_tailwind">Cruise (Tailwind)</button>
+                    <button class="journey-btn" data-phase="high_altitude">High Altitude Cruise</button>
+                    <button class="journey-btn" data-phase="flight_turns">Flight Turns</button>
+                    <button class="journey-btn" data-phase="ascent_maneuver">Ascent Maneuver</button>
+                    <button class="journey-btn" data-phase="descent_landing">Descent & Landing</button>
+                </div>
+
+                <div id="journey-detail-area" class="p-4 bg-slate-100 rounded-lg">
+                    <h3 id="journey-title" class="font-bold text-xl mb-2 text-cyan-700">1. Takeoff & Initial Ascent</h3>
+                    <p id="journey-explanation" class="text-slate-700 mb-2">
                         The mission begins with a vertical takeoff. This phase demands the highest power, as the rotors must generate enough thrust to overcome the drone's entire weight. Induced power is at its maximum here. As the eVTOL transitions from a hover to a gentle forward ascent, the power demand slightly decreases due to dynamic lift. Battery consumption is significant during this initial burst.
                     </p>
-                </div>
-                <div>
-                    <h3 class="text-xl font-bold mb-2">2. Cruise Flight & Speed Optimization</h3>
-                    <p class="text-slate-600">
-                        Once airborne, the eVTOL settles into its cruising phase. Depending on the mission (e.g., package delivery for 80 km), the flight control system will aim for the Maximum Range Speed (V<sub>mr</sub>) to cover the most distance efficiently. In calm air, this is the 'sweet spot' on the power curve. However, real-world conditions introduce complexity:
+                    <p id="journey-assumptions" class="text-sm text-slate-600 italic">
+                        <b>Assumptions:</b> Vertical takeoff, constant ascent rate (e.g., 2 m/s), high instantaneous power draw.
                     </p>
-                    <ul class="list-disc list-inside ml-4 text-slate-600 space-y-1 mt-2">
-                        <li><b>Wind Effects:</b> A strong headwind (e.g., 20 km/h) requires the drone to increase its airspeed to maintain the desired ground speed, significantly increasing parasitic power and battery consumption. Conversely, a tailwind allows for reduced airspeed while maintaining ground speed, saving energy.</li>
-                        <li><b>Atmospheric Pressure (Altitude):</b> At higher altitudes (e.g., 2000m), air density ($\rho$) is lower. To generate the same lift, the rotors must spin faster, increasing power consumption. This means a given battery capacity yields less range/endurance at higher altitudes.</li>
-                        <li><b>Speed Changes:</b> Accelerating to a higher speed increases parasitic power. Decelerating or maintaining a constant optimal speed minimizes these fluctuations in power demand.</li>
-                    </ul>
-                </div>
-                <div>
-                    <h3 class="text-xl font-bold mb-2">3. Maneuvers & Flight Turns</h3>
-                    <p class="text-slate-600">
-                        During the mission, the eVTOL may need to perform turns or other maneuvers. A standard turn, for instance, requires additional power to generate the necessary centripetal force and maintain altitude. This temporary increase in power draw impacts the overall battery budget. Complex flight paths with frequent turns or aggressive speed changes will consume more energy than a straight-line flight at optimal speed.
-                    </p>
-                </div>
-                <div>
-                    <h3 class="text-xl font-bold mb-2">4. Descent & Landing</h3>
-                    <p class="text-slate-600">
-                        As the eVTOL approaches its destination, it initiates a controlled descent. This phase typically requires less power than ascent, and in some cases, can even involve some energy recovery (though minimal for quadcopters). The drone reduces its forward speed, transitions back to a near-hover state, and then performs a precise vertical landing. The final moments of hovering before touchdown again see a peak in induced power, similar to takeoff, but for a shorter duration.
-                    </p>
-                </div>
-                <div class="p-4 bg-slate-100 rounded-lg">
-                    <h3 class="font-bold text-lg mb-2 text-cyan-700">Battery Considerations Throughout the Journey</h3>
-                    <p class="text-slate-700">
-                        The entire journey is constrained by the finite energy stored in the battery. Every phase, from the high-power takeoff to the energy-efficient cruise and the final landing, draws from this limited resource. Real-time power management by the avionics system is crucial to monitor consumption, estimate remaining flight time/range, and make adaptive decisions to ensure mission completion and a safe return, especially when facing unexpected conditions.
+                    <p id="journey-power-impact" class="text-sm text-slate-600">
+                        <b>Power Impact:</b> Very High.
                     </p>
                 </div>
             </div>
@@ -273,7 +280,7 @@
                     <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code><span class="text-cyan-400">FUNCTION</span> ManagePowerForManeuver(maneuver_type, battery_voltage)
     base_power = CalculatePowerConsumption(current_speed, "calm")
 
-    <span class="text-pink-400">IF</span> maneuver_type == "TURN" <span class="text-pink-400">THEN</span>
+    <span class="text-pink-400">IF</span> maneuver_type == "TURN" <span class="text-pink-400">TH1EN</span>
         maneuver_power_cost = base_power * 1.2 <span class="text-green-400">// 20% power increase</span>
     <span class="text-pink-400">ELSE IF</span> maneuver_type == "ASCENT" <span class="text-pink-400">THEN</span>
         power_for_climb = drone_weight * climb_rate
@@ -326,9 +333,9 @@
                 tailwind:   { power_mult: 1.0, speed_offset: -20 },
                 turn:       { power_mult: 1.2, speed_offset: 0 },
                 turbulence: { power_mult: 1.1, speed_offset: 0 },
-                high_alt:   { power_mult: 1.22, speed_offset: 0 },
-                ascent:     { power_mult: 1.5, speed_offset: 0 },
-                descent:    { power_mult: 0.7, speed_offset: 0 },
+                high_alt:   { power_mult: 1.22, speed_offset: 0 }, // Assuming 2000m altitude, approx 22% increase in power for same lift
+                ascent:     { power_mult: 1.5, speed_offset: 0 }, // Assuming constant ascent rate, 50% increase
+                descent:    { power_mult: 0.7, speed_offset: 0 }, // Assuming controlled descent, 30% reduction
             };
             let currentCondition = 'calm';
 
@@ -546,11 +553,80 @@
                 document.getElementById('vmrValue').textContent = vmr_kmh + ' km/h';
             }
 
+            const journeyPhases = {
+                takeoff: {
+                    title: '1. Takeoff & Initial Ascent',
+                    explanation: 'The mission begins with a vertical takeoff. This phase demands the highest power, as the rotors must generate enough thrust to overcome the drone\'s entire weight. Induced power is at its maximum here. As the eVTOL transitions from a hover to a gentle forward ascent, the power demand slightly decreases due to dynamic lift. Battery consumption is significant during this initial burst.',
+                    assumptions: 'Vertical takeoff, constant ascent rate (e.g., 2 m/s), high instantaneous power draw. Assumed to be a short duration phase.',
+                    powerImpact: 'Very High (Peak induced power).'
+                },
+                cruise_calm: {
+                    title: '2. Cruise Flight (Calm Air)',
+                    explanation: 'Once airborne, the eVTOL settles into its cruising phase. In calm air, the flight control system will aim for the Maximum Range Speed (V<sub>mr</sub>) to cover the most distance efficiently, or Maximum Endurance Speed (V<sub>mp</sub>) for longest flight time. This is the \'sweet spot\' on the power curve where power consumption is stable and optimized.',
+                    assumptions: 'No wind, standard atmospheric pressure (sea level), constant altitude and speed. Drone maintains optimal speed for mission objective.',
+                    powerImpact: 'Stable and Optimized (Lowest for given objective).'
+                },
+                cruise_headwind: {
+                    title: '3. Cruise Flight (Headwind)',
+                    explanation: 'When flying against a headwind (e.g., 20 km/h), the drone must increase its airspeed to maintain the desired ground speed. This significantly increases parasitic power and overall battery consumption, reducing effective range and endurance.',
+                    assumptions: 'Constant headwind (e.g., 20 km/h), drone increases airspeed to compensate. Air density remains constant.',
+                    powerImpact: 'Increased (due to higher effective airspeed).'
+                },
+                cruise_tailwind: {
+                    title: '4. Cruise Flight (Tailwind)',
+                    explanation: 'With a tailwind (e.g., 20 km/h), the drone can reduce its airspeed while still maintaining the desired ground speed. This leads to lower parasitic drag and reduced power consumption, extending effective range and endurance.',
+                    assumptions: 'Constant tailwind (e.g., 20 km/h), drone reduces airspeed to compensate. Air density remains constant.',
+                    powerImpact: 'Reduced (due to lower effective airspeed).'
+                },
+                high_altitude: {
+                    title: '5. High Altitude Cruise',
+                    explanation: 'At higher altitudes (e.g., 2000m), air density ($\rho$) is lower. To generate the same amount of lift required to stay airborne, the rotors must spin faster. This increases overall power consumption, meaning a given battery capacity yields less range/endurance.',
+                    assumptions: 'Constant altitude (e.g., 2000m), reduced air density compared to sea level. Power multiplier reflects increased effort for lift.',
+                    powerImpact: 'Increased (due to lower air density).'
+                },
+                flight_turns: {
+                    title: '6. Flight Turns',
+                    explanation: 'During maneuvers like turns, the eVTOL requires additional power. This extra power is needed to generate the necessary centripetal force to change direction while simultaneously maintaining altitude. This temporary increase in power draw impacts the overall battery budget.',
+                    assumptions: 'Standard turn maneuver, temporary increase in power. Speed is generally maintained or slightly reduced.',
+                    powerImpact: 'Temporary Increase.'
+                },
+                ascent_maneuver: {
+                    title: '7. Ascent Maneuver',
+                    explanation: 'A sustained ascent to gain altitude requires a significant increase in power. The drone needs to generate thrust not only to counteract gravity but also to accelerate vertically. This is a high-power phase, though typically less demanding than initial takeoff.',
+                    assumptions: 'Constant vertical climb rate (e.g., 2 m/s). Power is significantly higher than level flight.',
+                    powerImpact: 'Significantly Increased.'
+                },
+                descent_landing: {
+                    title: '8. Descent & Landing',
+                    explanation: 'As the eVTOL approaches its destination, it initiates a controlled descent. This phase typically requires less power than ascent, and in some cases, can even involve some energy recovery (though minimal for quadcopters). The drone reduces its forward speed, transitions back to a near-hover state, and then performs a precise vertical landing. The final moments of hovering before touchdown again see a peak in induced power, similar to takeoff, but for a shorter duration.',
+                    assumptions: 'Controlled descent, transition to hover speed, vertical landing. Power consumption is generally lower than cruise, with a final peak at hover.',
+                    powerImpact: 'Reduced (compared to cruise), then temporary peak at final hover.'
+                }
+            };
+
+            function updateJourneyDetail(phaseKey) {
+                const phase = journeyPhases[phaseKey];
+                document.getElementById('journey-title').textContent = phase.title;
+                document.getElementById('journey-explanation').textContent = phase.explanation;
+                document.getElementById('journey-assumptions').innerHTML = `<b>Assumptions:</b> ${phase.assumptions}`;
+                document.getElementById('journey-power-impact').innerHTML = `<b>Power Impact:</b> ${phase.powerImpact}`;
+            }
+
+            document.querySelectorAll('.journey-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.journey-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    updateJourneyDetail(e.target.dataset.phase);
+                });
+            });
+
+
             // Initial setup
-            findOptimalSpeeds();
+            findOptimalSpeeds(); // Call the function after its definition
             document.querySelector('.condition-btn[data-condition="calm"]').click();
             document.getElementById('btnInduced').click();
             updateSimulator();
+            document.querySelector('.journey-btn[data-phase="takeoff"]').click(); // Initialize journey detail area
         });
     </script>
 </body>
