@@ -366,11 +366,40 @@
                 total: []
             };
 
+            // Moved updatePowerData function definition here
             function updatePowerData(conditionKey) {
                 powerData.induced = speeds_kmh.map(s => calculatePowerComponents(s, conditionKey).induced);
                 powerData.parasitic = speeds_kmh.map(s => calculatePowerComponents(s, conditionKey).parasitic);
                 powerData.profile = speeds_kmh.map(s => calculatePowerComponents(s, conditionKey).profile);
                 powerData.total = speeds_kmh.map(s => calculatePowerComponents(s, conditionKey).total);
+            }
+
+            // Moved findOptimalSpeeds function definition here
+            function findOptimalSpeeds() {
+                updatePowerData('calm');
+                const totalPowerCalm = powerData.total;
+
+                let minPower = Infinity;
+                let vmp_kmh = 0;
+                totalPowerCalm.forEach((p, i) => {
+                    if (p < minPower) {
+                        minPower = p;
+                        vmp_kmh = speeds_kmh[i];
+                    }
+                });
+                document.getElementById('vmpValue').textContent = vmp_kmh + ' km/h';
+
+                let maxRangeMetric = 0;
+                let vmr_kmh = 0;
+                totalPowerCalm.forEach((p, i) => {
+                    const speed = speeds_kmh[i];
+                    const rangeMetric = speed / p;
+                    if (rangeMetric > maxRangeMetric) {
+                        maxRangeMetric = rangeMetric;
+                        vmr_kmh = speed;
+                    }
+                });
+                document.getElementById('vmrValue').textContent = vmr_kmh + ' km/h';
             }
 
             const chart = new Chart(ctx, {
@@ -526,33 +555,6 @@
                 });
             });
 
-            function findOptimalSpeeds() {
-                updatePowerData('calm');
-                const totalPowerCalm = powerData.total;
-
-                let minPower = Infinity;
-                let vmp_kmh = 0;
-                totalPowerCalm.forEach((p, i) => {
-                    if (p < minPower) {
-                        minPower = p;
-                        vmp_kmh = speeds_kmh[i];
-                    }
-                });
-                document.getElementById('vmpValue').textContent = vmp_kmh + ' km/h';
-
-                let maxRangeMetric = 0;
-                let vmr_kmh = 0;
-                totalPowerCalm.forEach((p, i) => {
-                    const speed = speeds_kmh[i];
-                    const rangeMetric = speed / p;
-                    if (rangeMetric > maxRangeMetric) {
-                        maxRangeMetric = rangeMetric;
-                        vmr_kmh = speed;
-                    }
-                });
-                document.getElementById('vmrValue').textContent = vmr_kmh + ' km/h';
-            }
-
             const journeyPhases = {
                 takeoff: {
                     title: '1. Takeoff & Initial Ascent',
@@ -580,7 +582,7 @@
                 },
                 high_altitude: {
                     title: '5. High Altitude Cruise',
-                    explanation: 'At higher altitudes (e.g., 2000m), air density ($\rho$) is lower. To generate the same amount of lift required to stay airborne, the rotors must spin faster. This increases overall power consumption, meaning a given battery capacity yields less range/endurance.',
+                    explanation: 'At higher altitudes (e.g., 2000m), air density (ρ) is lower. To generate the same amount of lift required to stay airborne, the rotors must spin faster. This increases overall power consumption, meaning a given battery capacity yields less range/endurance.',
                     assumptions: 'Constant altitude (e.g., 2000m), reduced air density compared to sea level. Power multiplier reflects increased effort for lift.',
                     powerImpact: 'Increased (due to lower air density).'
                 },
