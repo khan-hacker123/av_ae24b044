@@ -152,31 +152,67 @@
             </div>
 
             <div id="formulaSection" class="formula-box hidden mt-8">
-                <h3 class="text-xl font-bold mb-4">Underlying Physics Formulas (Simplified)</h3>
-                <p class="mb-2">The total power required by the drone is the sum of its components:</p>
-                <code>P_total(v) = P_induced(v) + P_parasitic(v) + P_profile + P_system</code>
-                
-                <p class="mt-4 mb-2"><strong>Induced Power (Hover):</strong> Power to produce lift.</p>
-                <code>P_i_hover = (mass * g)^1.5 / sqrt(2 * rho * A_d)</code>
-                
-                <p class="mt-4 mb-2"><strong>Induced Power (Forward Flight - Simplified):</strong> Decreases with forward speed.</p>
-                <code>P_induced(v) = P_i_hover / sqrt(v_air^2 + v_h^2) * v_air</code>
-                <code>where v_h = P_i_hover / (mass * g)</code>
-                
-                <p class="mt-4 mb-2"><strong>Parasitic Power:</strong> Power to overcome air resistance, increases cubically with speed.</p>
-                <code>P_parasitic(v) = 0.5 * rho * v_air^3 * C_D * A_f</code>
-                
-                <p class="mt-4 mb-2"><strong>Usable Battery Energy:</strong> Total energy available for flight.</p>
-                <code>E_usable = Battery Capacity (Wh)</code>
-                <p class="text-sm text-gray-600">Note: In this calculator, system efficiency and nominal voltage are abstracted into the 'Usable Battery Capacity' slider for simplicity.</p>
+    <h3 class="text-xl font-bold mb-4">Underlying Physics Formulas (Simplified)</h3>
+    <p class="mb-2">The total power required by the drone is the sum of its components. This model is a simplification for interactive demonstration, based on general principles of rotary-wing flight. For a more detailed and exact model, refer to the "Technical Deep Dive" section below.</p>
+    <code>P_total(v) = P_induced(v) + P_parasitic(v) + P_profile + P_system</code>
+    <dl>
+        <dt>P_total(v)</dt><dd>Total power consumed by the drone at a given speed 'v'. This represents the sum of all power required to keep the drone airborne and moving forward.</dd>
+        <dt>P_induced(v)</dt><dd>Power required to generate lift, dependent on speed. This component is related to the energy expended by the rotors to move air downwards, creating thrust. (See below for details)</dd>
+        <dt>P_parasitic(v)</dt><dd>Power required to overcome air resistance on the drone's body, dependent on speed. This is the drag caused by the drone's shape and surface friction as it moves through the air. (See below for details)</dd>
+        <dt>P_profile</dt><dd>Power required to spin the rotor blades, assumed constant for simplicity in this calculator. This accounts for the drag on the rotor blades themselves as they rotate. (See Deep Dive for detailed understanding)</dd>
+        <dt>P_system</dt><dd>Constant power consumed by drone's electronics (flight controller, sensors, communication systems, etc.). This is the baseline power draw for the drone's onboard systems.</dd>
+    </dl>
+    
+    <p class="mt-4 mb-2"><strong>Induced Power (Hover):</strong> This is the power needed just to keep the drone suspended in the air without any forward motion. It's the maximum induced power requirement. (Reference: Section 3.1, "Induced Power" in the Technical Deep Dive)</p>
+    <code>P_i_hover = (mass * g)^1.5 / sqrt(2 * rho * A_d)</code>
+    <dl>
+        <dt>P_i_hover</dt><dd>Induced power required during hover (at zero forward speed), measured in Watts (W) or kilowatts (kW).</dd>
+        <dt>mass</dt><dd>Total mass of the drone including its structure, propulsion system, battery, and any payload (e.g., pilot for a 1-seater). Measured in kilograms (kg).</dd>
+        <dt>g</dt><dd>Acceleration due to gravity, a constant value representing the force pulling objects towards the Earth. Approximately 9.81 meters per second squared (m/s^2).</dd>
+        <dt>rho</dt><dd>Air density, representing the mass of air per unit volume. This value changes with altitude and temperature. Approximately 1.225 kg/m^3 at sea level and standard atmospheric conditions.</dd>
+        <dt>A_d</dt><dd>Total rotor disc area, which is the combined area swept by all the spinning rotors or ducted fans. Measured in square meters (m^2).</dd>
+    </dl>
+    
+    <p class="mt-4 mb-2"><strong>Induced Power (Forward Flight - Simplified):</strong> As the drone moves forward, it continuously encounters "fresh" air, which makes lift generation more efficient. This generally reduces the induced power required compared to hovering. (Reference: Section 3.1, "Induced Power" in the Technical Deep Dive)</p>
+    <code>P_induced(v) = P_i_hover / sqrt(v_air^2 + v_h^2) * v_air</code>
+    <code>where v_h = P_i_hover / (mass * g)</code>
+    <dl>
+        <dt>P_induced(v)</dt><dd>Induced power at a given forward speed 'v', measured in Watts (W) or kilowatts (kW).</dd>
+        <dt>v_air</dt><dd>Drone's speed relative to the air, which accounts for any headwinds or tailwinds. Measured in meters per second (m/s).</dd>
+        <dt>v_h</dt><dd>Effective induced velocity at hover. This term represents the speed at which air is accelerated downwards by the rotors to produce lift in hover conditions. Measured in meters per second (m/s).</dd>
+    </dl>
+    
+    <p class="mt-4 mb-2"><strong>Parasitic Power:</strong> This power is consumed to overcome the air resistance on the drone's non-lifting components (fuselage, landing gear, etc.) as it moves through the air. It increases sharply with speed due to the nature of aerodynamic drag. (Reference: Section 3.1, "Parasite Power" in the Technical Deep Dive)</p>
+    <code>P_parasitic(v) = 0.5 * rho * v_air^3 * C_D * A_f</code>
+    <dl>
+        <dt>P_parasitic(v)</dt><dd>Parasitic power at a given forward speed 'v', measured in Watts (W) or kilowatts (kW).</dd>
+        <dt>C_D</dt><dd>Drag Coefficient, a dimensionless measure of how aerodynamic or "slippery" the drone's shape is. A lower value indicates less drag.</dd>
+        <dt>A_f</dt><dd>Frontal Area, which is the cross-sectional area of the drone that directly faces the oncoming airflow. Measured in square meters (m^2).</dd>
+    </dl>
+    
+    <p class="mt-4 mb-2"><strong>Usable Battery Energy:</strong> The total amount of electrical energy stored in the drone's battery that is available for flight operations. This value accounts for the battery's nominal capacity and any system efficiencies. (Reference: Section 4, "Impact of Flight Speed on Power Consumption and Flight Time" in the Technical Deep Dive)</p>
+    <code>E_usable = Battery Capacity (Wh)</code>
+    <dl>
+        <dt>E_usable</dt><dd>Total usable energy from the battery, measured in Watt-hours (Wh).</dd>
+        <dt>Battery Capacity</dt><dd>The nominal capacity of the battery pack, typically given in Watt-hours (Wh) or kilowatt-hours (kWh). In this calculator, kWh input is converted to Wh for calculations.</dd>
+    </dl>
+    <p class="text-sm text-gray-600">Note: In this calculator, overall system efficiency (motor, ESC, battery discharge) and nominal voltage are abstracted into the 'Usable Battery Capacity' slider for simplicity.</p>
 
-                <p class="mt-4 mb-2"><strong>Flight Time (Endurance):</strong></p>
-                <code>t = E_usable / P_total(v)</code>
+    <p class="mt-4 mb-2"><strong>Flight Time (Endurance):</strong> This is the total duration that the drone can stay airborne at a given flight speed, calculated by dividing the total usable energy by the rate of energy consumption (total power). (Reference: Section 4, "Impact of Flight Speed on Power Consumption and Flight Time" in the Technical Deep Dive)</p>
+    <code>t = E_usable / P_total(v)</code>
+    <dl>
+        <dt>t</dt><dd>Flight time, measured in hours (h).</dd>
+    </dl>
 
-                <p class="mt-4 mb-2"><strong>Range:</strong></p>
-                <code>Range = v_ground * t</code>
-                <p class="text-sm text-gray-600">Where v_air = v_ground + v_wind (for headwind).</p>
-            </div>
+    <p class="mt-4 mb-2"><strong>Range:</strong> This is the total horizontal distance the drone can travel from its starting point. It is calculated by multiplying the drone's ground speed by its total flight time. (Reference: Section 5.2, "Maximum-Range Speed (V_mr)" in the Technical Deep Dive)</p>
+    <code>Range = v_ground * t</code>
+    <dl>
+        <dt>Range</dt><dd>Total distance covered, measured in kilometers (km).</dd>
+        <dt>v_ground</dt><dd>Drone's speed relative to the ground. This is the speed at which the drone is actually covering distance over the earth's surface. Measured in kilometers per hour (km/h).</dd>
+    </dl>
+    <p class="text-sm text-gray-600">Where v_air = v_ground + v_wind (for headwind). If there's a headwind, the drone must fly faster through the air to maintain the same ground speed, increasing power consumption. Conversely, a tailwind would reduce the required air speed for the same ground speed. (Reference: Section 7, "Operational Considerations" in the Technical Deep Dive)</p>
+</div>
+
 
             <div class="mt-12 grid lg:grid-cols-12 gap-8">
                 <div class="lg:col-span-4 bg-white rounded-xl shadow-md p-6 space-y-6">
